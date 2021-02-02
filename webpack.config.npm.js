@@ -38,8 +38,7 @@ const npmSetupPlugins = [
     patterns: [
       { from: './package.json', to: `${DIST_DIR}/package.json` },
       { from: './NPM-README.md', to: `${DIST_DIR}/README.md` },
-
-      { from: JS_ROOT, to: `${DIST_DIR}/src` }
+      //{ from: JS_ROOT, to: `${DIST_DIR}/src` }
     ]
   })
 ];
