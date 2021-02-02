@@ -16,10 +16,12 @@ jobs:
       with:
         node-version: '14'
     - run: npm ci
-    - run: pushd tools/jison
-    - run: npm ci
-    - run: node generateParsers.js databricks
-    - run: popd
+    - name: Jison parser npm install
+      working-directory: ./tools/jison
+      run: npm ci
+    - name: Jison parser npm install
+      working-directory: ./tools/jison
+      run: node generateParsers.js databricks
     - run: npm run webpack-npm
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
