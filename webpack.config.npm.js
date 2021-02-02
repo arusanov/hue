@@ -57,40 +57,45 @@ const webComponentsConfig = Object.assign({}, defaultConfig, {
 
 const parserConf = Object.assign({}, defaultConfig, {
   entry: {
-    calciteAutocompleteParser: [`${JS_ROOT}/parse/sql/calcite/calciteAutocompleteParser.js`],
-    calciteSyntaxParser: [`${JS_ROOT}/parse/sql/calcite/calciteSyntaxParser.js`],
+    // calciteAutocompleteParser: [`${JS_ROOT}/parse/sql/calcite/calciteAutocompleteParser.js`],
+    // calciteSyntaxParser: [`${JS_ROOT}/parse/sql/calcite/calciteSyntaxParser.js`],
+    //
+    // druidAutocompleteParser: [`${JS_ROOT}/parse/sql/druid/druidAutocompleteParser.js`],
+    // druidSyntaxParser: [`${JS_ROOT}/parse/sql/druid/druidSyntaxParser.js`],
+    //
+    // elasticsearchAutocompleteParser: [
+    //   `${JS_ROOT}/parse/sql/elasticsearch/elasticsearchAutocompleteParser.js`
+    // ],
+    // elasticsearchSyntaxParser: [`${JS_ROOT}/parse/sql/elasticsearch/elasticsearchSyntaxParser.js`],
+    //
+    // flinkAutocompleteParser: [`${JS_ROOT}/parse/sql/flink/flinkAutocompleteParser.js`],
+    // flinkSyntaxParser: [`${JS_ROOT}/parse/sql/flink/flinkSyntaxParser.js`],
+    //
+    // genericAutocompleteParser: [`${JS_ROOT}/parse/sql/generic/genericAutocompleteParser.js`],
+    // genericSyntaxParser: [`${JS_ROOT}/parse/sql/generic/genericSyntaxParser.js`],
+    //
+    // hiveAutocompleteParser: [`${JS_ROOT}/parse/sql/hive/hiveAutocompleteParser.js`],
+    // hiveSyntaxParser: [`${JS_ROOT}/parse/sql/hive/hiveSyntaxParser.js`],
+    //
+    // impalaAutocompleteParser: [`${JS_ROOT}/parse/sql/impala/impalaAutocompleteParser.js`],
+    // impalaSyntaxParser: [`${JS_ROOT}/parse/sql/impala/impalaSyntaxParser.js`],
+    //
+    // ksqlAutocompleteParser: [`${JS_ROOT}/parse/sql/ksql/ksqlAutocompleteParser.js`],
+    // ksqlSyntaxParser: [`${JS_ROOT}/parse/sql/ksql/ksqlSyntaxParser.js`],
+    //
+    // phoenixAutocompleteParser: [`${JS_ROOT}/parse/sql/phoenix/phoenixAutocompleteParser.js`],
+    // phoenixSyntaxParser: [`${JS_ROOT}/parse/sql/phoenix/phoenixSyntaxParser.js`],
+    //
+    // prestoAutocompleteParser: [`${JS_ROOT}/parse/sql/presto/prestoAutocompleteParser.js`],
+    // prestoSyntaxParser: [`${JS_ROOT}/parse/sql/presto/prestoSyntaxParser.js`],
+    //
+    // dasksqlAutocompleteParser: [`${JS_ROOT}/parse/sql/dasksql/dasksqlAutocompleteParser.js`],
+    // dasksqlSyntaxParser: [`${JS_ROOT}/parse/sql/dasksql/dasksqlSyntaxParser.js`],
 
-    druidAutocompleteParser: [`${JS_ROOT}/parse/sql/druid/druidAutocompleteParser.js`],
-    druidSyntaxParser: [`${JS_ROOT}/parse/sql/druid/druidSyntaxParser.js`],
-
-    elasticsearchAutocompleteParser: [
-      `${JS_ROOT}/parse/sql/elasticsearch/elasticsearchAutocompleteParser.js`
+    databricksAutocompleteParser: [
+      `${JS_ROOT}/parse/sql/databricks/databricksAutocompleteParser.js`
     ],
-    elasticsearchSyntaxParser: [`${JS_ROOT}/parse/sql/elasticsearch/elasticsearchSyntaxParser.js`],
-
-    flinkAutocompleteParser: [`${JS_ROOT}/parse/sql/flink/flinkAutocompleteParser.js`],
-    flinkSyntaxParser: [`${JS_ROOT}/parse/sql/flink/flinkSyntaxParser.js`],
-
-    genericAutocompleteParser: [`${JS_ROOT}/parse/sql/generic/genericAutocompleteParser.js`],
-    genericSyntaxParser: [`${JS_ROOT}/parse/sql/generic/genericSyntaxParser.js`],
-
-    hiveAutocompleteParser: [`${JS_ROOT}/parse/sql/hive/hiveAutocompleteParser.js`],
-    hiveSyntaxParser: [`${JS_ROOT}/parse/sql/hive/hiveSyntaxParser.js`],
-
-    impalaAutocompleteParser: [`${JS_ROOT}/parse/sql/impala/impalaAutocompleteParser.js`],
-    impalaSyntaxParser: [`${JS_ROOT}/parse/sql/impala/impalaSyntaxParser.js`],
-
-    ksqlAutocompleteParser: [`${JS_ROOT}/parse/sql/ksql/ksqlAutocompleteParser.js`],
-    ksqlSyntaxParser: [`${JS_ROOT}/parse/sql/ksql/ksqlSyntaxParser.js`],
-
-    phoenixAutocompleteParser: [`${JS_ROOT}/parse/sql/phoenix/phoenixAutocompleteParser.js`],
-    phoenixSyntaxParser: [`${JS_ROOT}/parse/sql/phoenix/phoenixSyntaxParser.js`],
-
-    prestoAutocompleteParser: [`${JS_ROOT}/parse/sql/presto/prestoAutocompleteParser.js`],
-    prestoSyntaxParser: [`${JS_ROOT}/parse/sql/presto/prestoSyntaxParser.js`],
-
-    dasksqlAutocompleteParser: [`${JS_ROOT}/parse/sql/dasksql/dasksqlAutocompleteParser.js`],
-    dasksqlSyntaxParser: [`${JS_ROOT}/parse/sql/dasksql/dasksqlSyntaxParser.js`]
+    databricksSyntaxParser: [`${JS_ROOT}/parse/sql/databricks/databricksSyntaxParser.js`]
   },
   performance: {
     hints: false,
@@ -104,7 +109,8 @@ const parserConf = Object.assign({}, defaultConfig, {
     libraryTarget: 'umd',
     umdNamedDefine: true,
     globalObject: `(typeof self !== 'undefined' ? self : this)`
-  }
+  },
+  plugins: npmSetupPlugins
 });
 
-module.exports = [webComponentsConfig, parserConf];
+module.exports = [/*webComponentsConfig,*/ parserConf];

@@ -62,7 +62,6 @@
     "load/load_data.jison",
     "msck/msck.jison",
     "truncate/truncate_table.jison",
-    "update/update.jison",
     "use/use.jison",
     "../generic/sql_valueExpression.jison",
     "sql_main.jison",
