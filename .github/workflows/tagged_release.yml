@@ -1,11 +1,8 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
-name: Latest release
+name: Tagged release
 on:
   push:
-    branches: [ master ]
-
+    tags:
+      - "v*"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,14 +16,12 @@ jobs:
     - name: Jison parser npm install
       working-directory: ./tools/jison
       run: npm ci
-    - name: Jison parser npm install
+    - name: Jison parser generate
       working-directory: ./tools/jison
       run: node generateParsers.js databricks generic
     - run: npm run webpack-npm
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: true
-        title: "Latest Build"
+        prerelease: false
         files: npm_dist/**/*
