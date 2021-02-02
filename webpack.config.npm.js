@@ -37,7 +37,7 @@ const npmSetupPlugins = [
   new CopyWebpackPlugin({
     patterns: [
       { from: './package.json', to: `${DIST_DIR}/package.json` },
-      { from: './NPM-README.md', to: `${DIST_DIR}/README.md` },
+      { from: './NPM-README.md', to: `${DIST_DIR}/README.md` }
       //{ from: JS_ROOT, to: `${DIST_DIR}/src` }
     ]
   })
@@ -70,8 +70,8 @@ const parserConf = Object.assign({}, defaultConfig, {
     // flinkAutocompleteParser: [`${JS_ROOT}/parse/sql/flink/flinkAutocompleteParser.js`],
     // flinkSyntaxParser: [`${JS_ROOT}/parse/sql/flink/flinkSyntaxParser.js`],
     //
-    // genericAutocompleteParser: [`${JS_ROOT}/parse/sql/generic/genericAutocompleteParser.js`],
-    // genericSyntaxParser: [`${JS_ROOT}/parse/sql/generic/genericSyntaxParser.js`],
+    genericAutocompleteParser: [`${JS_ROOT}/parse/sql/generic/genericAutocompleteParser.js`],
+    genericSyntaxParser: [`${JS_ROOT}/parse/sql/generic/genericSyntaxParser.js`],
     //
     // hiveAutocompleteParser: [`${JS_ROOT}/parse/sql/hive/hiveAutocompleteParser.js`],
     // hiveSyntaxParser: [`${JS_ROOT}/parse/sql/hive/hiveSyntaxParser.js`],

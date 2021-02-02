@@ -21,11 +21,12 @@ jobs:
       run: npm ci
     - name: Jison parser npm install
       working-directory: ./tools/jison
-      run: node generateParsers.js databricks
+      run: node generateParsers.js databricks generic
     - run: npm run webpack-npm
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         prerelease: true
+        title: "Latest Build"
         files: npm_dist/**/*
