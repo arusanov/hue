@@ -23,10 +23,11 @@ jobs:
       working-directory: ./tools/jison
       run: node generateParsers.js databricks generic
     - run: npm run webpack-npm
+    - run: tar -cf gethue.tar.gz ./npm_dist/**
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
+        automatic_release_tag: "master"
         prerelease: true
         title: "Latest Build"
-        files: npm_dist/**/*
+        files: gethue.tar.gz
