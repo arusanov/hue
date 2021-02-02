@@ -17,6 +17,11 @@
 DataDefinition_EDIT
  : 'DROP' 'CURSOR'
    {
-     parser.suggestKeywords(['DATABASE', 'ROLE', 'SCHEMA', 'TABLE', 'VIEW']);
+     parser.suggestKeywords(['DATABASE', 'FUNCTION', 'INDEX', 'SCHEMA', 'TABLE', 'TEMPORARY FUNCTION', 'VIEW']);
    }
+ ;
+
+OptionalPurge
+ :
+ | 'PURGE'
  ;

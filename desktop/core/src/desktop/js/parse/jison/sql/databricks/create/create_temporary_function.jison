@@ -15,5 +15,20 @@
 // limitations under the License.
 
 DataDefinition
- : 'SET' 'ALL'
+ : CreateTemporaryFunction
+ ;
+
+DataDefinition_EDIT
+ : CreateTemporaryFunction_EDIT
+ ;
+
+CreateTemporaryFunction
+ : 'CREATE' 'TEMPORARY' 'FUNCTION' RegularIdentifier 'AS' SingleQuotedValue
+ ;
+
+CreateTemporaryFunction_EDIT
+ : 'CREATE' 'TEMPORARY' 'FUNCTION' RegularIdentifier 'CURSOR'
+   {
+     parser.suggestKeywords(['AS']);
+   }
  ;

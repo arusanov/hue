@@ -17,6 +17,17 @@
 DataDefinition_EDIT
  : 'ALTER' 'CURSOR'
    {
-     parser.suggestKeywords(['TABLE', 'VIEW']);
+     parser.suggestKeywords('ALTER');
    }
  ;
+
+
+
+
+
+
+
+
+
+
+

@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import databricksAutocompleteParser from '../databricksAutocompleteParser';
-
 describe('databricksAutocompleteParser.js DROP statements', () => {
   beforeAll(() => {
     databricksAutocompleteParser.yy.parseError = function (msg) {
@@ -39,10 +38,149 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
     assertAutoComplete({
       beforeCursor: 'DROP ',
       afterCursor: '',
-      containsKeywords: ['DATABASE', 'ROLE', 'SCHEMA', 'TABLE', 'VIEW'],
       expectedResult: {
-        lowerCase: false
+        lowerCase: false,
+        suggestKeywords: [
+          'DATABASE',
+          'FUNCTION',
+          'INDEX',
+          'SCHEMA',
+          'TABLE',
+          'TEMPORARY FUNCTION',
+          'VIEW'
+        ]
       }
+    });
+  });
+
+  it('should follow case for "drop |"', () => {
+    assertAutoComplete({
+      beforeCursor: 'drop ',
+      afterCursor: '',
+      containsKeywords: ['DATABASE'],
+      expectedResult: {
+        lowerCase: true
+      }
+    });
+  });
+
+  describe('DELETE FROM', () => {
+    it('should handle "DELETE FROM boo.baa;|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM boo.baa;',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should handle "DELETE FROM boo.baa WHERE id < 1 AND bla IN (SELECT * FROM boo);|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM boo.baa WHERE id < 1 AND bla IN (SELECT * FROM boo);',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "|"', () => {
+      assertAutoComplete({
+        beforeCursor: '',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['DELETE'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "DELETE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['FROM']
+        }
+      });
+    });
+
+    it('should suggest tables for "DELETE FROM |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: {},
+          suggestDatabases: { appendDot: true }
+        }
+      });
+    });
+
+    it('should suggest tables for "DELETE FROM db.|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM db.',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: { identifierChain: [{ name: 'db' }] }
+        }
+      });
+    });
+
+    it('should suggest keywords for "DELETE FROM boo.baa |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM boo.baa ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['WHERE']
+        }
+      });
+    });
+
+    it('should suggest columns for "DELETE FROM boo.baa WHERE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM boo.baa WHERE ',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['EXISTS'],
+        expectedResult: {
+          lowerCase: false,
+          suggestFunctions: {},
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'boo' }, { name: 'baa' }] }] }
+        }
+      });
+    });
+
+    it('should suggest columns for "DELETE FROM boo.baa WHERE id > |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DELETE FROM boo.baa WHERE id > ',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['EXISTS'],
+        expectedResult: {
+          lowerCase: false,
+          suggestValues: {},
+          suggestFunctions: { types: ['COLREF'] },
+          colRef: { identifierChain: [{ name: 'boo' }, { name: 'baa' }, { name: 'id' }] },
+          suggestColumns: {
+            types: ['COLREF'],
+            tables: [{ identifierChain: [{ name: 'boo' }, { name: 'baa' }] }]
+          }
+        }
+      });
     });
   });
 
@@ -71,17 +209,6 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       });
     });
 
-    it('should suggest keywords for "DROP DATABASE IF |"', () => {
-      assertAutoComplete({
-        beforeCursor: 'DROP DATABASE IF ',
-        afterCursor: '',
-        expectedResult: {
-          lowerCase: false,
-          suggestKeywords: ['EXISTS']
-        }
-      });
-    });
-
     it('should suggest databases for "DROP DATABASE IF EXISTS |"', () => {
       assertAutoComplete({
         beforeCursor: 'DROP DATABASE IF EXISTS ',
@@ -97,7 +224,43 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       assertAutoComplete({
         beforeCursor: 'DROP DATABASE foo ',
         afterCursor: '',
-        containsKeywords: ['CASCADE'],
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+  });
+
+  describe('DROP FUNCTION', () => {
+    it('should handle "DROP FUNCTION IF EXISTS baa;', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP FUNCTION IF EXISTS baa;',
+        afterCursor: '',
+        containsKeywords: ['SELECT'],
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP ',
+        afterCursor: '',
+        containsKeywords: ['FUNCTION'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP FUNCTION |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP FUNCTION ',
+        afterCursor: '',
+        containsKeywords: ['IF EXISTS'],
         expectedResult: {
           lowerCase: false
         }
@@ -105,15 +268,60 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
     });
   });
 
-  describe('DROP ROLE', () => {
-    it('should handle "DROP ROLE boo;|"', () => {
+  describe('DROP INDEX', () => {
+    it('should handle "DROP INDEX IF EXISTS baa ON baa.boo;|"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP ROLE boo;',
+        beforeCursor: 'DROP INDEX IF EXISTS baa ON baa.boo;',
         afterCursor: '',
         noErrors: true,
         containsKeywords: ['SELECT'],
         expectedResult: {
           lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP INDEX |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP INDEX ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['IF EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP INDEX IF |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP INDEX IF ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP INDEX baa |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP INDEX baa ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['ON']
+        }
+      });
+    });
+
+    it('should suggest tabls for "DROP INDEX baa ON |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP INDEX baa ON ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: {},
+          suggestDatabases: { appendDot: true }
         }
       });
     });
@@ -184,6 +392,30 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
     });
   });
 
+  describe('DROP TEMPORARY FUNCTION', () => {
+    it('should suggest keywords for "DROP TEMPORARY FUNCTION |', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP TEMPORARY FUNCTION ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['IF EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "DROP TEMPORARY FUNCTION IF |', () => {
+      assertAutoComplete({
+        beforeCursor: 'DROP TEMPORARY FUNCTION IF ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['EXISTS']
+        }
+      });
+    });
+  });
+
   describe('DROP VIEW', () => {
     it('should handle "DROP VIEW boo;|', () => {
       assertAutoComplete({
@@ -243,44 +475,6 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
         expectedResult: {
           lowerCase: false,
           suggestTables: { identifierChain: [{ name: 'boo' }], onlyViews: true }
-        }
-      });
-    });
-  });
-
-  describe('TRUNCATE TABLE', () => {
-    it('should handle "TRUNCATE TABLE baa.boo;"', () => {
-      assertAutoComplete({
-        beforeCursor: 'TRUNCATE TABLE baa.boo;',
-        afterCursor: '',
-        containsKeywords: ['SELECT'],
-        noErrors: true,
-        expectedResult: {
-          lowerCase: false
-        }
-      });
-    });
-
-    it('should suggest keywords for "TRUNCATE |"', () => {
-      assertAutoComplete({
-        beforeCursor: 'truncate ',
-        afterCursor: '',
-        expectedResult: {
-          lowerCase: true,
-          suggestKeywords: ['TABLE']
-        }
-      });
-    });
-
-    it('should suggest tables for "TRUNCATE TABLE |"', () => {
-      assertAutoComplete({
-        beforeCursor: 'TRUNCATE TABLE ',
-        afterCursor: '',
-        expectedResult: {
-          lowerCase: false,
-          suggestTables: {},
-          suggestDatabases: { appendDot: true },
-          suggestKeywords: ['IF EXISTS']
         }
       });
     });

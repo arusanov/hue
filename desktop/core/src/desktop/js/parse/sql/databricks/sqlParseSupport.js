@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import KEYWORDS from './keywords.json';
 import { matchesType } from 'sql/reference/typeUtils';
 import {
   initSharedAutocomplete,
@@ -26,10 +27,38 @@ import {
 const initSqlParser = function (parser) {
   initSharedAutocomplete(parser);
 
+  parser.DDL_AND_DML_KEYWORDS = [
+    'ABORT',
+    'ALTER',
+    'ANALYZE TABLE',
+    'CREATE',
+    'DELETE',
+    'DESCRIBE',
+    'DROP',
+    'EXPORT',
+    'GRANT',
+    'IMPORT',
+    'INSERT',
+    'LOAD',
+    'MERGE',
+    'MSCK',
+    'RELOAD FUNCTION',
+    'RESET',
+    'REVOKE',
+    'SELECT',
+    'SET',
+    'SHOW',
+    'TRUNCATE',
+    'UPDATE',
+    'USE',
+    'WITH'
+  ];
+
   parser.prepareNewStatement = function () {
     linkTablePrimaries();
     parser.commitLocations();
 
+    delete parser.yy.lateralViews;
     delete parser.yy.latestCommonTableExpressions;
     delete parser.yy.correlatedSubQuery;
     parser.yy.subQueries = [];
@@ -56,6 +85,7 @@ const initSqlParser = function (parser) {
   parser.pushQueryState = function () {
     parser.yy.resultStack.push(parser.yy.result);
     parser.yy.locationsStack.push(parser.yy.locations);
+    parser.yy.lateralViewsStack.push(parser.yy.lateralViews);
     parser.yy.selectListAliasesStack.push(parser.yy.selectListAliases);
     parser.yy.primariesStack.push(parser.yy.latestTablePrimaries);
     parser.yy.subQueriesStack.push(parser.yy.subQueries);
@@ -63,6 +93,7 @@ const initSqlParser = function (parser) {
     parser.yy.result = {};
     parser.yy.locations = [];
     parser.yy.selectListAliases = []; // Not allowed in correlated sub-queries
+    parser.yy.lateralViews = []; // Not allowed in correlated sub-queries
 
     if (parser.yy.correlatedSubQuery) {
       parser.yy.latestTablePrimaries = parser.yy.latestTablePrimaries.concat();
@@ -91,6 +122,7 @@ const initSqlParser = function (parser) {
       parser.yy.subQueries.push(subQuery);
     }
 
+    parser.yy.lateralViews = parser.yy.lateralViewsStack.pop();
     parser.yy.latestTablePrimaries = parser.yy.primariesStack.pop();
     parser.yy.locations = parser.yy.locationsStack.pop();
     parser.yy.selectListAliases = parser.yy.selectListAliasesStack.pop();
@@ -135,7 +167,7 @@ const initSqlParser = function (parser) {
   };
 
   parser.getSelectListKeywords = function (excludeAsterisk) {
-    const keywords = [{ value: 'CASE', weight: 450 }, 'FALSE', 'TRUE', 'NULL'];
+    const keywords = [{ value: 'CASE', weight: 450 }, 'EXISTS', 'FALSE', 'TRUE', 'NULL', 'NOT'];
     if (!excludeAsterisk) {
       keywords.push({ value: '*', weight: 10000 });
     }
@@ -195,12 +227,16 @@ const initSqlParser = function (parser) {
   parser.getTypeKeywords = function () {
     return [
       'BIGINT',
+      'BINARY',
       'BOOLEAN',
       'CHAR',
+      'DATE',
       'DECIMAL',
       'DOUBLE',
+      'DOUBLE PRECISION',
       'FLOAT',
       'INT',
+      'INTEGER',
       'SMALLINT',
       'TIMESTAMP',
       'STRING',
@@ -210,7 +246,7 @@ const initSqlParser = function (parser) {
   };
 
   parser.getColumnDataTypeKeywords = function () {
-    return parser.getTypeKeywords();
+    return parser.getTypeKeywords().concat(['ARRAY<>', 'MAP<>', 'STRUCT<>', 'UNIONTYPE<>']);
   };
 
   parser.addColRefIfExists = function (valueExpression) {
@@ -256,6 +292,26 @@ const initSqlParser = function (parser) {
 
   parser.suggestJoins = function (details) {
     parser.yy.result.suggestJoins = details || {};
+  };
+
+  parser.valueExpressionSuggest = function (oppositeValueExpression, operator) {
+    if (oppositeValueExpression && oppositeValueExpression.columnReference) {
+      parser.suggestValues();
+      parser.yy.result.colRef = { identifierChain: oppositeValueExpression.columnReference };
+    }
+    parser.suggestColumns();
+    parser.suggestFunctions();
+    let keywords = [
+      { value: 'CASE', weight: 450 },
+      { value: 'FALSE', weight: 450 },
+      { value: 'NULL', weight: 450 },
+      { value: 'TRUE', weight: 450 }
+    ];
+    keywords = keywords.concat(['EXISTS', 'NOT']);
+    if (oppositeValueExpression && oppositeValueExpression.types[0] === 'NUMBER') {
+      parser.applyTypeToSuggestions(oppositeValueExpression);
+    }
+    parser.suggestKeywords(keywords);
   };
 
   parser.findCaseType = function (whenThenList) {
@@ -459,6 +515,13 @@ const initSqlParser = function (parser) {
       }
 
       if (location.type === 'column') {
+        if (!location.linked) {
+          location.identifierChain = parser.expandLateralViews(
+            parser.yy.lateralViews,
+            location.identifierChain
+          );
+        }
+
         const initialIdentifierChain = location.identifierChain
           ? location.identifierChain.concat()
           : undefined;
@@ -654,6 +717,67 @@ const initSqlParser = function (parser) {
     };
   };
 
+  parser.expandLateralViews = function (lateralViews, originalIdentifierChain, columnSuggestion) {
+    let identifierChain = originalIdentifierChain.concat(); // Clone in case it's re-used
+    let firstIdentifier = identifierChain[0];
+    if (typeof lateralViews !== 'undefined') {
+      lateralViews
+        .concat()
+        .reverse()
+        .forEach(lateralView => {
+          if (!lateralView.udtf.expression.columnReference) {
+            return;
+          }
+          if (
+            equalIgnoreCase(firstIdentifier.name, lateralView.tableAlias) &&
+            identifierChain.length > 1
+          ) {
+            identifierChain.shift();
+            firstIdentifier = identifierChain[0];
+            if (columnSuggestion) {
+              delete parser.yy.result.suggestKeywords;
+            }
+          } else if (
+            equalIgnoreCase(firstIdentifier.name, lateralView.tableAlias) &&
+            identifierChain.length === 1 &&
+            typeof parser.yy.result.suggestColumns !== 'undefined'
+          ) {
+            if (columnSuggestion) {
+              if (typeof parser.yy.result.suggestIdentifiers === 'undefined') {
+                parser.yy.result.suggestIdentifiers = [];
+              }
+              lateralView.columnAliases.forEach(columnAlias => {
+                parser.yy.result.suggestIdentifiers.push({ name: columnAlias, type: 'alias' });
+              });
+              delete parser.yy.result.suggestColumns;
+              delete parser.yy.result.suggestKeywords;
+            }
+            return identifierChain;
+          }
+          if (lateralView.columnAliases.indexOf(firstIdentifier.name) !== -1) {
+            if (
+              lateralView.columnAliases.length === 2 &&
+              lateralView.udtf.function.toLowerCase() === 'explode' &&
+              equalIgnoreCase(firstIdentifier.name, lateralView.columnAliases[0])
+            ) {
+              identifierChain[0] = { name: 'key' };
+            } else if (
+              lateralView.columnAliases.length === 2 &&
+              lateralView.udtf.function.toLowerCase() === 'explode' &&
+              equalIgnoreCase(firstIdentifier.name, lateralView.columnAliases[1])
+            ) {
+              identifierChain[0] = { name: 'value' };
+            } else {
+              identifierChain[0] = { name: 'item' };
+            }
+            identifierChain = lateralView.udtf.expression.columnReference.concat(identifierChain);
+            firstIdentifier = identifierChain[0];
+          }
+        });
+    }
+    return identifierChain;
+  };
+
   const addCleanTablePrimary = function (tables, tablePrimary) {
     if (tablePrimary.alias) {
       tables.push({ alias: tablePrimary.alias, identifierChain: tablePrimary.identifierChain });
@@ -717,6 +841,12 @@ const initSqlParser = function (parser) {
         delete wrapper.identifierChain;
         return;
       }
+    }
+
+    // Expand exploded views in the identifier chain
+    if (identifierChain.length > 0) {
+      identifierChain = parser.expandLateralViews(parser.yy.lateralViews, identifierChain);
+      wrapper.identifierChain = identifierChain;
     }
 
     // IdentifierChain contains a possibly started identifier or empty, example: a.b.c = ['a', 'b', 'c']
@@ -827,6 +957,29 @@ const initSqlParser = function (parser) {
     wrapper.linked = true;
   };
 
+  const suggestLateralViewAliasesAsIdentifiers = function () {
+    if (typeof parser.yy.lateralViews === 'undefined' || parser.yy.lateralViews.length === 0) {
+      return;
+    }
+    if (typeof parser.yy.result.suggestIdentifiers === 'undefined') {
+      parser.yy.result.suggestIdentifiers = [];
+    }
+    parser.yy.lateralViews.forEach(lateralView => {
+      if (typeof lateralView.tableAlias !== 'undefined') {
+        parser.yy.result.suggestIdentifiers.push({
+          name: lateralView.tableAlias + '.',
+          type: 'alias'
+        });
+      }
+      lateralView.columnAliases.forEach(columnAlias => {
+        parser.yy.result.suggestIdentifiers.push({ name: columnAlias, type: 'alias' });
+      });
+    });
+    if (parser.yy.result.suggestIdentifiers.length === 0) {
+      delete parser.yy.result.suggestIdentifiers;
+    }
+  };
+
   const filterTablePrimariesForOwner = function (tablePrimaries, owner) {
     const result = [];
     tablePrimaries.forEach(primary => {
@@ -932,11 +1085,36 @@ const initSqlParser = function (parser) {
         if (tablePrimaries.length > 1) {
           convertTablePrimariesToSuggestions(tablePrimaries);
         } else {
+          suggestLateralViewAliasesAsIdentifiers();
           if (
             tablePrimaries.length === 1 &&
             (tablePrimaries[0].alias || tablePrimaries[0].subQueryAlias)
           ) {
             convertTablePrimariesToSuggestions(tablePrimaries);
+          }
+          parser.expandIdentifierChain({
+            wrapper: parser.yy.result.suggestColumns,
+            anyOwner: false,
+            isColumnWrapper: true
+          });
+        }
+      } else if (!parser.yy.result.suggestColumns.linked) {
+        // Expand exploded views in the identifier chain
+        const originalLength = parser.yy.result.suggestColumns.identifierChain.length;
+        parser.yy.result.suggestColumns.identifierChain = parser.expandLateralViews(
+          parser.yy.lateralViews,
+          parser.yy.result.suggestColumns.identifierChain,
+          true
+        );
+        // Drop '*' keyword for lateral views
+        if (typeof parser.yy.result.suggestColumns !== 'undefined') {
+          if (
+            parser.yy.result.suggestColumns.identifierChain.length > originalLength &&
+            typeof parser.yy.result.suggestKeywords !== 'undefined' &&
+            parser.yy.result.suggestKeywords.length === 1 &&
+            parser.yy.result.suggestKeywords[0].value === '*'
+          ) {
+            delete parser.yy.result.suggestKeywords;
           }
           parser.expandIdentifierChain({
             wrapper: parser.yy.result.suggestColumns,
@@ -982,13 +1160,21 @@ const initSqlParser = function (parser) {
   parser.suggestFileFormats = function () {
     parser.suggestKeywords([
       'AVRO',
-      'KUDU',
+      'INPUTFORMAT',
+      'JSONFILE',
       'ORC',
       'PARQUET',
       'RCFILE',
       'SEQUENCEFILE',
       'TEXTFILE'
     ]);
+  };
+
+  parser.suggestKeywordsForOptionalsLR = function (optionals, keywords, override) {
+    const result = parser.getKeywordsForOptionalsLR(optionals, keywords, override);
+    if (result.length) {
+      parser.suggestKeywords(result);
+    }
   };
 
   parser.getKeywordsForOptionalsLR = function (optionals, keywords, override) {
@@ -1009,22 +1195,7 @@ const initSqlParser = function (parser) {
   };
 
   parser.suggestDdlAndDmlKeywords = function (extraKeywords) {
-    let keywords = [
-      'ALTER',
-      'CREATE',
-      'DESCRIBE',
-      'DROP',
-      'GRANT',
-      'INSERT',
-      'REVOKE',
-      'SELECT',
-      'SET',
-      'SHOW',
-      'TRUNCATE',
-      'UPDATE',
-      'USE',
-      'WITH'
-    ];
+    let keywords = parser.DDL_AND_DML_KEYWORDS;
 
     if (extraKeywords) {
       keywords = keywords.concat(extraKeywords);
@@ -1086,26 +1257,7 @@ const initSqlParser = function (parser) {
     return result;
   };
 
-  parser.suggestKeywords = function (keywords) {
-    const weightedKeywords = [];
-    if (keywords.length === 0) {
-      return;
-    }
-    keywords.forEach(keyword => {
-      if (typeof keyword.weight !== 'undefined') {
-        weightedKeywords.push(keyword);
-      } else {
-        weightedKeywords.push({ value: keyword, weight: -1 });
-      }
-    });
-    weightedKeywords.sort((a, b) => {
-      if (a.weight !== b.weight) {
-        return b.weight - a.weight;
-      }
-      return a.value.localeCompare(b.value);
-    });
-    parser.yy.result.suggestKeywords = weightedKeywords;
-  };
+  parser.KEYWORDS = KEYWORDS;
 
   parser.suggestColRefKeywords = function (colRefKeywords) {
     parser.yy.result.suggestColRefKeywords = colRefKeywords;
@@ -1302,13 +1454,14 @@ const initSqlParser = function (parser) {
     parser.yy.subQueries = [];
     parser.yy.errors = [];
     parser.yy.selectListAliases = [];
-    parser.yy.activeDialect = 'generic';
 
     parser.yy.locationsStack = [];
     parser.yy.primariesStack = [];
+    parser.yy.lateralViewsStack = [];
     parser.yy.subQueriesStack = [];
     parser.yy.resultStack = [];
     parser.yy.selectListAliasesStack = [];
+    parser.yy.activeDialect = 'databricks';
 
     delete parser.yy.caseDetermined;
     delete parser.yy.cursorFound;

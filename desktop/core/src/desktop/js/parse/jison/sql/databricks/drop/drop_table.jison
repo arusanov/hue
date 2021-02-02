@@ -56,8 +56,3 @@ DropTableStatement_EDIT
      }
    }
  ;
-
-OptionalPurge
- :
- | 'PURGE'
- ;

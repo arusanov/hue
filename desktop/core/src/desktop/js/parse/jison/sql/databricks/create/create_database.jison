@@ -15,22 +15,21 @@
 // limitations under the License.
 
 DataDefinition
- : DatabaseDefinition
+ : CreateDatabase
  ;
 
 DataDefinition_EDIT
- : DatabaseDefinition_EDIT
+ : CreateDatabase_EDIT
  ;
 
-DatabaseDefinition
- : 'CREATE' DatabaseOrSchema OptionalIfNotExists
- | 'CREATE' DatabaseOrSchema OptionalIfNotExists RegularIdentifier DatabaseDefinitionOptionals
+CreateDatabase
+ : 'CREATE' DatabaseOrSchema OptionalIfNotExists RegularIdentifier DatabaseDefinitionOptionals
    {
      parser.addNewDatabaseLocation(@4, [{ name: $4 }]);
    }
  ;
 
-DatabaseDefinition_EDIT
+CreateDatabase_EDIT
  : 'CREATE' DatabaseOrSchema OptionalIfNotExists 'CURSOR'
    {
      if (!$3) {
@@ -56,14 +55,67 @@ DatabaseDefinition_EDIT
  ;
 
 DatabaseDefinitionOptionals
- : OptionalComment
+ : OptionalComment OptionalHdfsLocation OptionalManagedLocation OptionalDbProperties
    {
-     if (!$1) {
-       parser.suggestKeywords(['COMMENT']);
+     var keywords = [];
+     if (!$4) {
+       keywords.push('WITH DBPROPERTIES');
+     }
+     if (!$3 && !$4) {
+       keywords.push('MANAGEDLOCATION');
+     }
+     if (!$2 && !$3 && !$4) {
+       keywords.push('LOCATION');
+     }
+     if (!$1 && !$2 && !$3 && !$4) {
+       keywords.push('COMMENT');
+     }
+     if (keywords.length > 0) {
+       parser.suggestKeywords(keywords);
      }
    }
  ;
 
 DatabaseDefinitionOptionals_EDIT
- : OptionalComment_INVALID
+ : Comment_INVALID OptionalHdfsLocation OptionalManagedLocation OptionalDbProperties
+ | OptionalComment HdfsLocation_EDIT OptionalManagedLocation OptionalDbProperties
+ | OptionalComment OptionalHdfsLocation ManagedLocation_EDIT OptionalDbProperties
+ | OptionalComment OptionalHdfsLocation OptionalManagedLocation DbProperties_EDIT
+ ;
+
+Comment_INVALID
+ : 'COMMENT' SINGLE_QUOTE
+ | 'COMMENT' DOUBLE_QUOTE
+ | 'COMMENT' SINGLE_QUOTE VALUE
+ | 'COMMENT' DOUBLE_QUOTE VALUE
+ ;
+
+OptionalManagedLocation
+ :
+ | ManagedLocation
+ ;
+
+ManagedLocation
+ : 'MANAGEDLOCATION' HdfsPath
+ ;
+
+ManagedLocation_EDIT
+ : 'MANAGEDLOCATION' HdfsPath_EDIT
+ ;
+
+OptionalDbProperties
+ :
+ | DbProperties
+ ;
+
+DbProperties
+ : 'WITH' 'DBPROPERTIES' ParenthesizedPropertyAssignmentList
+ | 'WITH' 'DBPROPERTIES'
+ ;
+
+DbProperties_EDIT
+ : 'WITH' 'CURSOR'
+   {
+     parser.suggestKeywords(['DBPROPERTIES']);
+   }
  ;

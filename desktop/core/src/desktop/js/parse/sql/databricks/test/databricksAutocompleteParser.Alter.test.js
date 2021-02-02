@@ -35,6 +35,134 @@ describe('databricksAutocompleteParser.js ALTER statements', () => {
     ).toEqualDefinition(testDefinition);
   };
 
+  describe('ALTER DATABASE', () => {
+    it("should handle \"ALTER DATABASE baa SET DBPROPERTIES ('boo'=1, 'baa'=2);|\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER DATABASE baa SET DBPROPERTIES ('boo'=1, 'baa'=2);",
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+
+    it('should handle "ALTER DATABASE baa SET LOCATION \'/baa/boo\';|"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER DATABASE baa SET LOCATION '/baa/boo';",
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should handle "ALTER DATABASE baa SET MANAGEDLOCATION \'/baa/boo\';|"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER DATABASE baa SET MANAGEDLOCATION '/baa/boo';",
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER ',
+        afterCursor: '',
+        containsKeywords: ['DATABASE', 'SCHEMA'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest databases for "ALTER DATABASE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER DATABASE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestDatabases: {}
+        }
+      });
+    });
+
+    it('should suggest databases for "ALTER SCHEMA |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER SCHEMA ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestDatabases: {}
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER SCHEMA boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER SCHEMA boo ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['SET DBPROPERTIES', 'SET LOCATION', 'SET MANAGEDLOCATION', 'SET OWNER']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER DATABASE boo SET |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER DATABASE boo SET ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['DBPROPERTIES', 'LOCATION', 'MANAGEDLOCATION', 'OWNER']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER DATABASE boo SET OWNER |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER DATABASE boo SET OWNER ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['GROUP', 'ROLE', 'USER']
+        }
+      });
+    });
+
+    it('should suggest hdfs for "ALTER DATABASE boo SET LOCATION \'/|"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER DATABASE boo SET LOCATION '/",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '/' }
+        }
+      });
+    });
+
+    it('should suggest hdfs for "ALTER DATABASE boo SET MANAGEDLOCATION \'/|"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER DATABASE boo SET MANAGEDLOCATION '/",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '/' }
+        }
+      });
+    });
+  });
+
+
   describe('ALTER TABLE', () => {
     it('should suggest keywords for "ALTER |"', () => {
       assertAutoComplete({
@@ -66,6 +194,925 @@ describe('databricksAutocompleteParser.js ALTER statements', () => {
         expectedResult: {
           lowerCase: false,
           suggestTables: { identifierChain: [{ name: 'foo' }], onlyTables: true }
+        }
+      });
+    });
+
+    it('should handle "ALTER TABLE foo PARTITION (ds=\'2008-04-08\', hr) CHANGE COLUMN dec_column_name dec_column_name DECIMAL;|"', () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE foo PARTITION (ds='2008-04-08', hr) CHANGE COLUMN dec_column_name dec_column_name DECIMAL;",
+        afterCursor: '',
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it("should handle \"ALTER TABLE page_view DROP PARTITION (dt='2008-08-08', country='us');|\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE page_view DROP PARTITION (dt='2008-08-08', country='us');",
+        afterCursor: '',
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it("should handle \"ALTER TABLE page_view ADD PARTITION (dt='2008-08-08', country='us') location '/path/to/us/part080808'\nPARTITION (dt='2008-08-09', country='us') location '/path/to/us/part080809';|\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE page_view ADD PARTITION (dt='2008-08-08', country='us') location '/path/to/us/part080808'\nPARTITION (dt='2008-08-09', country='us') location '/path/to/us/part080809';",
+        afterCursor: '',
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: [
+            'ADD COLUMNS',
+            'ADD IF NOT EXISTS',
+            'ADD PARTITION',
+            'CHANGE',
+            'DROP',
+            'EXCHANGE PARTITION',
+            'PARTITION',
+            'RECOVER PARTITIONS',
+            'RENAME TO',
+            'REPLACE COLUMNS',
+            'SET FILEFORMAT',
+            'SET LOCATION',
+            'SET OWNER',
+            'SET SERDE',
+            'SET SERDEPROPERTIES',
+            'SET TBLPROPERTIES',
+            'UNSET SERDEPROPERTIES'
+          ]
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['IF NOT EXISTS', 'COLUMNS', 'CONSTRAINT', 'PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD COLUMNS (boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD COLUMNS (boo ',
+        afterCursor: '',
+        containsKeywords: ['INT', 'INTEGER', 'STRUCT<>'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD COLUMNS (boo INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD COLUMNS (boo INT ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CHECK', 'DEFAULT', 'NOT NULL', 'PRIMARY KEY', 'UNIQUE', 'COMMENT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD COLUMNS (boo INT) |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD COLUMNS (boo INT) ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD CONSTRAINT boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD CONSTRAINT boo ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CHECK', 'FOREIGN KEY', 'PRIMARY KEY', 'UNIQUE']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD CONSTRAINT boo FOREIGN |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD CONSTRAINT boo FOREIGN ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['KEY']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD CONSTRAINT boo FOREIGN KEY (bla) |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD CONSTRAINT boo FOREIGN KEY (bla) ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['REFERENCES']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD IF |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD IF ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['NOT EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD IF NOT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD IF NOT ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar ADD IF NOT EXISTS |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar ADD IF NOT EXISTS ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITION']
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08', country='us') |\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08', country='us')  ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['LOCATION', 'PARTITION']
+        }
+      });
+    });
+
+    it("should suggest hdfs for \"ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08', country='us') LOCATION '|\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08', country='us') LOCATION '",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '' }
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar ADD PARTITION (dt=\'2008-08-08\', |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08', ",
+        afterCursor: '',
+        expectedResult: {
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] },
+          lowerCase: false
+        }
+      });
+    });
+
+    it("should suggest columns for \"ALTER TABLE bar ADD PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION (|\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION  (",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar ADD PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION (baa=1) \"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION (baa=1) ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['LOCATION', 'PARTITION']
+        }
+      });
+    });
+
+    it("should suggest hdfs for \"ALTER TABLE bar ADD PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION (country='us') LOCATION '\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar ADD IF NOT EXISTS PARTITION (dt='2008-08-08') LOCATION '/boo' PARTITION (country='us') LOCATION '",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '' }
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar CHANGE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] },
+          suggestKeywords: ['COLUMN']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CHANGE boo baa |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE boo baa ',
+        afterCursor: '',
+        containsKeywords: ['ARRAY<>', 'INT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CHANGE boo baa INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE boo baa INT ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: [
+            'CHECK',
+            'DEFAULT',
+            'NOT NULL',
+            'PRIMARY KEY',
+            'UNIQUE',
+            'COMMENT',
+            'AFTER',
+            'FIRST',
+            'CASCADE',
+            'RESTRICT'
+          ]
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CHANGE boo baa INT COMMENT \'ble\' |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar CHANGE boo baa INT COMMENT 'ble' ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AFTER', 'FIRST', 'CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar CHANGE boo baa INT COMMENT \'ble\' AFTER |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar CHANGE boo baa INT COMMENT 'ble' AFTER ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar CHANGE boo baa INT FIRST |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE boo baa INT FIRST ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CHANGE boo baa INT FIRST ba |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE boo baa INT FIRST ba ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CHANGE COLUMN boo baa INT AFTER ba |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CHANGE COLUMN boo baa INT AFTER ba ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar CLUSTERED |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar CLUSTERED ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['BY']
+        }
+      });
+    });
+
+  
+
+    it('should suggest keywords for "ALTER TABLE bar DROP |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar DROP ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['IF EXISTS', 'CONSTRAINT', 'PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar DROP IF |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar DROP IF ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['EXISTS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar DROP IF EXISTS |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar DROP IF EXISTS ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITION']
+        }
+      });
+    });
+
+    // TODO: Suggest partitions
+    it('should suggest columns for "ALTER TABLE bar DROP IF EXISTS PARTITION (|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar DROP IF EXISTS PARTITION (',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar DROP IF EXISTS PARTITION (a=\'baa\'), |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar DROP IF EXISTS PARTITION (a='baa'), ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar DROP PARTITION (a=\'baa\') |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar DROP PARTITION (a='baa') ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PURGE']
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar DROP PARTITION (a='baa'), PARTITION (b='boo') |\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar DROP PARTITION (a='baa'), PARTITION (b='boo') ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PURGE']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar EXCHANGE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar EXCHANGE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar EXCHANGE PARTITION (boo=\'baa\') |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar EXCHANGE PARTITION (boo='baa') ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['WITH TABLE']
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) |\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['WITH TABLE']
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) WITH |\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) WITH ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['TABLE']
+        }
+      });
+    });
+
+    it("should suggest tables for \"ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) WITH TABLE |\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar EXCHANGE PARTITION ((boo='baa'), (baa='boo')) WITH TABLE ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: {},
+          suggestDatabases: { appendDot: true }
+        }
+      });
+    });
+
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: [
+            'ADD COLUMNS',
+            'CHANGE',
+            'RENAME TO PARTITION',
+            'REPLACE COLUMNS',
+            'SET FILEFORMAT',
+            'SET LOCATION',
+            'SET SERDE',
+            'SET SERDEPROPERTIES',
+            'UNSET SERDEPROPERTIES'
+          ]
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') ADD |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') ADD ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['COLUMNS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') ADD COLUMNS (boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') ADD COLUMNS (boo ",
+        afterCursor: '',
+        containsKeywords: ['INT', 'STRUCT<>'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') ADD COLUMNS (boo INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') ADD COLUMNS (boo INT ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CHECK', 'DEFAULT', 'NOT NULL', 'PRIMARY KEY', 'UNIQUE', 'COMMENT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') ADD COLUMNS (boo INT) |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') ADD COLUMNS (boo INT) ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] },
+          suggestKeywords: ['COLUMN']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col1, col2) CHANGE boo baa |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar PARTITION (col1, col2) CHANGE boo baa ',
+        afterCursor: '',
+        containsKeywords: ['ARRAY<>', 'INT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE boo baa |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa ",
+        afterCursor: '',
+        containsKeywords: ['ARRAY<>', 'INT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE boo baa INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: [
+            'CHECK',
+            'DEFAULT',
+            'NOT NULL',
+            'PRIMARY KEY',
+            'UNIQUE',
+            'COMMENT',
+            'AFTER',
+            'FIRST',
+            'CASCADE',
+            'RESTRICT'
+          ]
+        }
+      });
+    });
+
+    it("should suggest keywords for \"ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT COMMENT 'ble' |\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT COMMENT 'ble' ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AFTER', 'FIRST', 'CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it("should suggest columns for \"ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT COMMENT 'ble' AFTER |\"", () => {
+      assertAutoComplete({
+        beforeCursor:
+          "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT COMMENT 'ble' AFTER ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it('should suggest columns for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE boo baa INT FIRST |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT FIRST ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: { tables: [{ identifierChain: [{ name: 'bar' }] }] }
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE boo baa INT FIRST ba |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE boo baa INT FIRST ba ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') CHANGE COLUMN boo baa INT AFTER ba |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') CHANGE COLUMN boo baa INT AFTER ba ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') RENAME |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') RENAME ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['TO PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') RENAME TO |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') RENAME TO ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITION']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') REPLACE |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') REPLACE ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['COLUMNS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') REPLACE COLUMNS (boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') REPLACE COLUMNS (boo ",
+        afterCursor: '',
+        containsKeywords: ['INT', 'STRUCT<>'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') REPLACE COLUMNS (boo INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') REPLACE COLUMNS (boo INT ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CHECK', 'DEFAULT', 'NOT NULL', 'PRIMARY KEY', 'UNIQUE', 'COMMENT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') REPLACE COLUMNS (boo INT) |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') REPLACE COLUMNS (boo INT) ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') SET |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') SET ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['FILEFORMAT', 'LOCATION', 'SERDE', 'SERDEPROPERTIES']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar PARTITION (col=\'val\') SET FILEFORMAT |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') SET FILEFORMAT ",
+        afterCursor: '',
+        containsKeywords: ['ORC', 'PARQUET'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it("should suggest hdfs for \"ALTER TABLE bar PARTITION (col='val') SET LOCATION '|\"", () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar PARTITION (col='val') SET LOCATION '",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '' }
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar RECOVER |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar RECOVER ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['PARTITIONS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar RENAME |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar RENAME ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['TO']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar REPLACE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar REPLACE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['COLUMNS']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar REPLACE COLUMNS (boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar REPLACE COLUMNS (boo ',
+        afterCursor: '',
+        containsKeywords: ['INT','STRUCT<>'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar REPLACE COLUMNS (boo INT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar REPLACE COLUMNS (boo INT ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CHECK', 'DEFAULT', 'NOT NULL', 'PRIMARY KEY', 'UNIQUE', 'COMMENT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar REPLACE COLUMNS (boo INT) |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar REPLACE COLUMNS (boo INT) ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['CASCADE', 'RESTRICT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar SET |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar SET ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: [
+            'FILEFORMAT',
+            'LOCATION',
+            'OWNER',
+            'SERDE',
+            'SERDEPROPERTIES',
+            'TBLPROPERTIES'
+          ]
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar SET FILEFORMAT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar SET FILEFORMAT ',
+        afterCursor: '',
+        containsKeywords: ['ORC', 'PARQUET'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest hdfs for "ALTER TABLE bar SET LOCATION \'|"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar SET LOCATION '",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestHdfs: { path: '' }
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar SET OWNER |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar SET OWNER ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['GROUP', 'ROLE', 'USER']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar SET SERDE \'boo\' |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar SET SERDE 'boo' ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['WITH SERDEPROPERTIES']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar SET SERDE \'boo\' WITH |"', () => {
+      assertAutoComplete({
+        beforeCursor: "ALTER TABLE bar SET SERDE 'boo' WITH ",
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['SERDEPROPERTIES']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER TABLE bar UNSET |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER TABLE bar UNSET ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['SERDEPROPERTIES']
         }
       });
     });
@@ -147,6 +1194,122 @@ describe('databricksAutocompleteParser.js ALTER statements', () => {
         expectedResult: {
           lowerCase: false,
           suggestTables: {},
+          suggestDatabases: { appendDot: true }
+        }
+      });
+    });
+
+    it('should handle "ALTER VIEW boo SET TBLPROPERTIES ("baa"=\'boo\');|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER VIEW boo SET TBLPROPERTIES ("baa"=\'boo\');',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER VIEW boo |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER VIEW boo ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AS', 'RENAME TO', 'SET TBLPROPERTIES', 'UNSET TBLPROPERTIES']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER VIEW boo RENAME |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER VIEW boo RENAME ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['TO']
+        }
+      });
+    });
+
+    it('should suggest keywords for "ALTER VIEW boo SET |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'ALTER VIEW boo SET ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['TBLPROPERTIES']
+        }
+      });
+    });
+
+  it('should suggest keywords for "ALTER VIEW boo UNSET |"', () => {
+    assertAutoComplete({
+      beforeCursor: 'ALTER VIEW boo UNSET ',
+      afterCursor: '',
+      expectedResult: {
+        lowerCase: false,
+        suggestKeywords: ['TBLPROPERTIES']
+      }
+    });
+  });
+});
+
+  describe('MSCK', () => {
+    it('should handle "MSCK REPAIR TABLE boo.baa;|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MSCK REPAIR TABLE boo.baa;',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+
+    it('should suggest keywords for "|"', () => {
+      assertAutoComplete({
+        beforeCursor: '',
+        afterCursor: '',
+        containsKeywords: ['MSCK'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "MSCK |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MSCK ',
+        afterCursor: '',
+        containsKeywords: ['REPAIR TABLE'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "MSCK REPAIR |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MSCK REPAIR ',
+        afterCursor: '',
+        containsKeywords: ['TABLE'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest tables for "MSCK REPAIR TABLE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MSCK REPAIR TABLE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: { onlyTables: true },
           suggestDatabases: { appendDot: true }
         }
       });

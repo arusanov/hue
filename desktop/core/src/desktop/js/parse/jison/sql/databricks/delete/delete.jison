@@ -14,35 +14,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-FromClause
- : 'FROM' TableReferenceList
+DataManipulation
+ : DeleteStatement
+ ;
+
+DataManipulation_EDIT
+ : DeleteStatement_EDIT
+ ;
+
+DeleteStatement
+ : 'DELETE' 'FROM' SchemaQualifiedTableIdentifier OptionalWhereClause
    {
-     $$ = { tableReferenceList : $2 }
+     parser.addTablePrimary($3);
    }
  ;
 
-FromClause_EDIT
- : 'FROM' 'CURSOR'
+DeleteStatement_EDIT
+ : 'DELETE' 'CURSOR'
    {
-       parser.suggestTables();
-       parser.suggestDatabases({ appendDot: true });
+     parser.suggestKeywords(['FROM']);
    }
- | 'FROM' TableReferenceList_EDIT
- ;
-
-TableReferenceList
- : TableReference
- | TableReferenceList ',' TableReference  -> $3
- ;
-
-TableReferenceList_EDIT
- : TableReference_EDIT
- | TableReference_EDIT ',' TableReference
- | TableReferenceList ',' TableReference_EDIT
- | TableReferenceList ',' TableReference_EDIT ',' TableReferenceList
- | TableReferenceList ',' AnyCursor
+ | 'DELETE' 'FROM' 'CURSOR'
    {
-       parser.suggestTables();
-       parser.suggestDatabases({ appendDot: true });
+     parser.suggestTables();
+     parser.suggestDatabases({ appendDot: true });
+   }
+ | 'DELETE' 'FROM' SchemaQualifiedTableIdentifier 'CURSOR' OptionalWhereClause
+   {
+     parser.addTablePrimary($3);
+     if (!$5) {
+       parser.suggestKeywords(['WHERE']);
+     }
+   }
+ | 'DELETE' 'FROM' SchemaQualifiedTableIdentifier_EDIT OptionalWhereClause
+ | 'DELETE' 'FROM' SchemaQualifiedTableIdentifier WhereClause_EDIT
+   {
+     parser.addTablePrimary($3);
    }
  ;

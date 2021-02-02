@@ -14,25 +14,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-OptionalHavingClause
- :
- | HavingClause
+DataDefinition
+ : DropIndexStatement
  ;
 
-HavingClause
- : 'HAVING' ValueExpression
+DataDefinition_EDIT
+ : DropIndexStatement_EDIT
  ;
 
-HavingClause_EDIT
- : 'HAVING' 'CURSOR'
+DropIndexStatement
+ : 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier
    {
-     parser.valueExpressionSuggest();
-     parser.suggestAggregateFunctions();
-     parser.suggestSelectListAliases(true);
+     parser.addTablePrimary($6);
    }
- | 'HAVING' ValueExpression_EDIT
+ ;
+
+DropIndexStatement_EDIT
+ : 'DROP' 'INDEX' OptionalIfExists 'CURSOR'
    {
-     parser.suggestAggregateFunctions();
-     parser.suggestSelectListAliases(true);
+     parser.suggestKeywords(['IF EXISTS']);
    }
+ | 'DROP' 'INDEX' OptionalIfExists_EDIT
+ | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'CURSOR'
+   {
+     parser.suggestKeywords(['ON']);
+   }
+ | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' 'CURSOR'
+   {
+     parser.suggestTables();
+     parser.suggestDatabases({ appendDot: true });
+   }
+ | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier_EDIT
  ;

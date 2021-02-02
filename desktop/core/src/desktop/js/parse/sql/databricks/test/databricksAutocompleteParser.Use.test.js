@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import databricksAutocompleteParser from '../databricksAutocompleteParser';
-
 describe('databricksAutocompleteParser.js USE statements', () => {
   beforeAll(() => {
     databricksAutocompleteParser.yy.parseError = function (msg) {

@@ -15,18 +15,18 @@
 // limitations under the License.
 
 DataDefinition
- : ViewDefinition
+ : CreateView
  ;
 
 DataDefinition_EDIT
- : ViewDefinition_EDIT
+ : CreateView_EDIT
  ;
 
-ViewDefinition
- : 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment 'AS' QuerySpecification
+CreateView
+ : 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'AS' QuerySpecification
  ;
 
-ViewDefinition_EDIT
+CreateView_EDIT
  : 'CREATE' 'VIEW' OptionalIfNotExists 'CURSOR'
    {
      if (!$3) {
@@ -34,28 +34,31 @@ ViewDefinition_EDIT
      }
      parser.suggestDatabases({ appendDot: true });
    }
- | 'CREATE' 'VIEW' OptionalIfNotExists 'CURSOR' SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment 'AS' QuerySpecification
+ | 'CREATE' 'VIEW' OptionalIfNotExists 'CURSOR' SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'AS' QuerySpecification
    {
      if (!$3) {
        parser.suggestKeywords(['IF NOT EXISTS']);
      }
    }
  | 'CREATE' 'VIEW' OptionalIfNotExists_EDIT
- | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier ParenthesizedViewColumnList_EDIT OptionalComment
- | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment 'CURSOR'
+ | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier ParenthesizedViewColumnList_EDIT OptionalComment OptionalTblproperties
+ | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'CURSOR'
    {
      var keywords = [{value: 'AS', weight: 1 }];
-     if (!$6) {
-       keywords.push({ value: 'COMMENT', weight: 3 });
+     if (!$7) {
+       keywords.push({ value: 'TBLPROPERTIES', weight: 2 });
+       if (!$6) {
+         keywords.push({ value: 'COMMENT', weight: 3 });
+       }
      }
      parser.suggestKeywords(keywords);
    }
- | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment 'AS' 'CURSOR'
+ | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'AS' 'CURSOR'
    {
      parser.suggestKeywords(['SELECT']);
    }
- | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment 'AS' QuerySpecification_EDIT
- | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier_EDIT OptionalParenthesizedViewColumnList OptionalComment 'AS' QuerySpecification
+ | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'AS' QuerySpecification_EDIT
+ | 'CREATE' 'VIEW' OptionalIfNotExists SchemaQualifiedIdentifier_EDIT OptionalParenthesizedViewColumnList OptionalComment OptionalTblproperties 'AS' QuerySpecification
  ;
 
 OptionalParenthesizedViewColumnList

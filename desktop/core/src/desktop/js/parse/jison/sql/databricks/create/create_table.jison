@@ -15,51 +15,105 @@
 // limitations under the License.
 
 DataDefinition
- : TableDefinition
+ : CreateTable
  ;
 
 DataDefinition_EDIT
- : TableDefinition_EDIT
+ : CreateTable_EDIT
  ;
 
-TableDefinition
- : 'CREATE' 'TABLE' OptionalIfNotExists TableDefinitionRightPart
+CreateTable
+ : 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists TableDefinitionRightPart
  ;
 
-TableDefinition_EDIT
- : 'CREATE' 'TABLE' OptionalIfNotExists TableDefinitionRightPart_EDIT
- | 'CREATE' 'TABLE' OptionalIfNotExists 'CURSOR'
+CreateTable_EDIT
+ : 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists TableDefinitionRightPart_EDIT
+ | 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists 'CURSOR'
    {
-     if (!$3) {
+     if (!$6) {
        parser.suggestKeywords(['IF NOT EXISTS']);
      }
    }
- | 'CREATE' 'TABLE' OptionalIfNotExists_EDIT
+ | 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists_EDIT
  ;
 
 TableDefinitionRightPart
- : TableIdentifierAndOptionalColumnSpecification OptionalPartitionedBy OptionalAsSelectStatement
+ : TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
  ;
 
 TableDefinitionRightPart_EDIT
- : TableIdentifierAndOptionalColumnSpecification_EDIT OptionalPartitionedBy OptionalAsSelectStatement
- | TableIdentifierAndOptionalColumnSpecification PartitionedBy_EDIT OptionalAsSelectStatement
- | TableIdentifierAndOptionalColumnSpecification OptionalPartitionedBy OptionalAsSelectStatement_EDIT
- | TableIdentifierAndOptionalColumnSpecification OptionalPartitionedBy 'CURSOR'
+ : TableIdentifierAndOptionalColumnSpecification_EDIT OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment PartitionedBy_EDIT
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   ClusteredBy_EDIT OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy SkewedBy_EDIT OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy RowFormat_EDIT OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat StoredAsOrBy_EDIT
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   WithSerdeproperties_EDIT OptionalHdfsLocation OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties HdfsLocation_EDIT OptionalTblproperties OptionalAsSelectStatement
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties AsSelectStatement_EDIT
+ | TableIdentifierAndOptionalColumnSpecification OptionalComment OptionalPartitionedBy
+   OptionalClusteredBy OptionalSkewedBy OptionalRowFormat OptionalStoredAsOrBy
+   OptionalWithSerdeproperties OptionalHdfsLocation OptionalTblproperties 'CURSOR'
    {
      var keywords = [];
-     if (!$1 && !$2) {
+     if (!$1 && !$2 && !$3 && !$4 && !$5 && !$6 && !$7 && !$8 && !$9 && !$10) {
        keywords.push({ value: 'LIKE', weight: 1 });
      } else {
-       if (!$2) {
-         keywords.push({ value: 'PARTITIONED BY', weight: 12 });
+       if (!$2 && !$3 && !$4 && !$5 && !$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'COMMENT', weight: 10 });
+       }
+       if (!$3 && !$4 && !$5 && !$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'PARTITIONED BY', weight: 9 });
+       }
+       if (!$4 && !$5 && !$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'CLUSTERED BY', weight: 8 });
+       }
+       if (!$5 && !$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'SKEWED BY', weight: 7 });
+       } else if ($5 && $5.suggestKeywords && !$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords = keywords.concat(parser.createWeightedKeywords($5.suggestKeywords, 7)); // Get the last optional from SKEWED BY
+       }
+       if (!$6 && !$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'ROW FORMAT', weight: 6 });
+       } else if ($6 && $6.suggestKeywords && !$7 && !$8 && !$9 && !$10) {
+         keywords = keywords.concat(parser.createWeightedKeywords($6.suggestKeywords, 6));
+       }
+       if (!$7 && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'STORED AS', weight: 5 });
+         keywords.push({ value: 'STORED BY', weight: 5 });
+       } else if ($7 && $7.storedBy && !$8 && !$9 && !$10) {
+         keywords.push({ value: 'WITH SERDEPROPERTIES', weight: 4 });
+       }
+       if (!$9 && !$10) {
+         keywords.push({ value: 'LOCATION', weight: 3 });
+       }
+       if (!$10) {
+         keywords.push({ value: 'TBLPROPERTIES', weight: 2 });
        }
        keywords.push({ value: 'AS', weight: 1 });
      }
 
-     if (keywords.length > 0) {
-       parser.suggestKeywords(keywords);
-     }
+     parser.suggestKeywords(keywords);
    }
  ;
 
@@ -72,7 +126,7 @@ TableIdentifierAndOptionalColumnSpecification
  ;
 
 TableIdentifierAndOptionalColumnSpecification_EDIT
- : SchemaQualifiedIdentifier OptionalColumnSpecificationsOrLike_EDIT
+ : SchemaQualifiedIdentifier ColumnSpecificationsOrLike_EDIT
  | SchemaQualifiedIdentifier_EDIT OptionalColumnSpecificationsOrLike
  ;
 
@@ -82,7 +136,7 @@ OptionalColumnSpecificationsOrLike
  | 'LIKE' SchemaQualifiedTableIdentifier    -> []
  ;
 
-OptionalColumnSpecificationsOrLike_EDIT
+ColumnSpecificationsOrLike_EDIT
  : ParenthesizedColumnSpecificationList_EDIT
  | 'LIKE' 'CURSOR'
    {
@@ -92,371 +146,63 @@ OptionalColumnSpecificationsOrLike_EDIT
  | 'LIKE' SchemaQualifiedTableIdentifier_EDIT
  ;
 
-ParenthesizedColumnSpecificationList
- : '(' ColumnSpecificationList ')'                              -> $2
- ;
-
-ParenthesizedColumnSpecificationList_EDIT
- : '(' ColumnSpecificationList_EDIT RightParenthesisOrError
- ;
-
-ColumnSpecificationList
- : ColumnSpecification                              -> [$1]
- | ColumnSpecificationList ',' ColumnSpecification  -> $1.concat($3)
- ;
-
-ColumnSpecificationList_EDIT
- : ColumnSpecification_EDIT
- | ColumnSpecification_EDIT ',' ColumnSpecificationList
- | ColumnSpecificationList ',' ColumnSpecification_EDIT
- | ColumnSpecificationList ',' ColumnSpecification_EDIT ',' ColumnSpecificationList
- | ColumnSpecification 'CURSOR'
-   {
-     parser.checkForKeywords($1);
-   }
- | ColumnSpecification 'CURSOR' ',' ColumnSpecificationList
-   {
-     parser.checkForKeywords($1);
-   }
- | ColumnSpecificationList ',' ColumnSpecification 'CURSOR'
-   {
-     parser.checkForKeywords($3);
-   }
- | ColumnSpecificationList ',' ColumnSpecification 'CURSOR' ',' ColumnSpecificationList
-   {
-     parser.checkForKeywords($3);
-   }
- ;
-
-ColumnSpecification
- : ColumnIdentifier ColumnDataType OptionalColumnOptions
-   {
-     $$ = $1;
-     $$.type = $2;
-     var keywords = [];
-     if (!$3['comment']) {
-       keywords.push('COMMENT');
-     }
-     if (keywords.length > 0) {
-       $$.suggestKeywords = keywords;
-     }
-   }
- ;
-
-ColumnSpecification_EDIT
- : ColumnIdentifier 'CURSOR' OptionalColumnOptions
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | ColumnIdentifier ColumnDataType_EDIT OptionalColumnOptions
- | ColumnIdentifier ColumnDataType ColumnOptions_EDIT
- ;
-
-OptionalColumnOptions
- :                      -> {}
- | ColumnOptions
- ;
-
-ColumnOptions
- : ColumnOption
-   {
-     $$ = {};
-     $$[$1] = true;
-   }
- | ColumnOptions ColumnOption
-   {
-     $1[$2] = true;
-   }
- ;
-
-ColumnOptions_EDIT
- : ColumnOption_EDIT
- | ColumnOption_EDIT ColumnOptions
- | ColumnOptions ColumnOption_EDIT
- | ColumnOptions ColumnOption_EDIT ColumnOptions
- ;
-
-ColumnOption
- : 'NOT' 'NULL'                                              -> 'null'
- | 'NULL'                                                    -> 'null'
- | Comment                                                   -> 'comment'
- ;
-
-ColumnOption_EDIT
- : 'NOT' 'CURSOR'
-   {
-     parser.suggestKeywords(['NULL']);
-   }
- ;
-
-ColumnDataType
- : PrimitiveType
- | ArrayType
- | MapType
- | StructType
- | ArrayType_INVALID
- | MapType_INVALID
- | StructType_INVALID
- ;
-
-ColumnDataType_EDIT
- : ArrayType_EDIT
- | MapType_EDIT
- | StructType_EDIT
- ;
-
-ArrayType
- : 'ARRAY' '<' ColumnDataType '>'
- ;
-
-ArrayType_INVALID
- : 'ARRAY' '<' '>'
- ;
-
-ArrayType_EDIT
- : 'ARRAY' '<' AnyCursor GreaterThanOrError
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | 'ARRAY' '<' ColumnDataType_EDIT GreaterThanOrError
- ;
-
-MapType
- : 'MAP' '<' PrimitiveType ',' ColumnDataType '>'
- ;
-
-MapType_INVALID
- : 'MAP' '<' '>'
- ;
-
-MapType_EDIT
- : 'MAP' '<' PrimitiveType ',' ColumnDataType_EDIT GreaterThanOrError
- | 'MAP' '<' AnyCursor GreaterThanOrError
-   {
-     parser.suggestKeywords(parser.getTypeKeywords());
-   }
- | 'MAP' '<' PrimitiveType ',' AnyCursor GreaterThanOrError
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | 'MAP' '<' ',' AnyCursor GreaterThanOrError
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- ;
-
-StructType
- : 'STRUCT' '<' StructDefinitionList '>'
- ;
-
-StructType_INVALID
- : 'STRUCT' '<' '>'
- ;
-
-StructType_EDIT
- : 'STRUCT' '<' StructDefinitionList_EDIT GreaterThanOrError
- ;
-
-StructDefinitionList
- : StructDefinition
- | StructDefinitionList ',' StructDefinition
- ;
-
-StructDefinitionList_EDIT
- : StructDefinition_EDIT
- | StructDefinition_EDIT Commas
- | StructDefinition_EDIT Commas StructDefinitionList
- | StructDefinitionList ',' StructDefinition_EDIT
- | StructDefinitionList ',' StructDefinition_EDIT Commas StructDefinitionList
- ;
-
-StructDefinition
- : RegularOrBacktickedIdentifier ':' ColumnDataType OptionalComment
- ;
-
-StructDefinition_EDIT
- : Commas RegularOrBacktickedIdentifier ':' ColumnDataType 'CURSOR'
-   {
-     parser.suggestKeywords(['COMMENT']);
-   }
- | Commas RegularOrBacktickedIdentifier ':' AnyCursor
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | Commas RegularOrBacktickedIdentifier ':' ColumnDataType_EDIT
- | RegularOrBacktickedIdentifier ':' ColumnDataType 'CURSOR'
-   {
-     parser.suggestKeywords(['COMMENT']);
-   }
- | RegularOrBacktickedIdentifier ':' AnyCursor
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | RegularOrBacktickedIdentifier ':' ColumnDataType_EDIT
- ;
-
-ColumnDataTypeList
- : ColumnDataType
- | ColumnDataTypeList ',' ColumnDataType
- ;
-
-ColumnDataTypeList_EDIT
- : ColumnDataTypeListInner_EDIT
- | ColumnDataTypeListInner_EDIT Commas
- | ColumnDataTypeList ',' ColumnDataTypeListInner_EDIT
- | ColumnDataTypeListInner_EDIT Commas ColumnDataTypeList
- | ColumnDataTypeList ',' ColumnDataTypeListInner_EDIT Commas ColumnDataTypeList
- ;
-
-ColumnDataTypeListInner_EDIT
- : Commas AnyCursor
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | Commas ColumnDataType_EDIT
- | AnyCursor
-   {
-     parser.suggestKeywords(parser.getColumnDataTypeKeywords());
-   }
- | ColumnDataType_EDIT
- ;
-
-GreaterThanOrError
- : '>'
- | error
- ;
-
 OptionalPartitionedBy
  :
  | PartitionedBy
  ;
 
 PartitionedBy
- : 'PARTITION' 'BY' RangeClause
+ : 'PARTITIONED' 'BY' ParenthesizedColumnSpecificationList
  ;
 
 PartitionedBy_EDIT
- : 'PARTITION' 'CURSOR'
+ : 'PARTITIONED' 'CURSOR'
+   {
+     parser.suggestKeywords(['BY']);
+   }
+ | 'PARTITIONED' 'CURSOR' ParenthesizedColumnSpecificationList
+   {
+     parser.suggestKeywords(['BY']);
+   }
+ | 'PARTITIONED' 'BY' ParenthesizedColumnSpecificationList_EDIT
+ | 'PARTITIONED' ParenthesizedColumnSpecificationList_EDIT
+ | 'PARTITION' 'CURSOR'
    {
      parser.suggestKeywords(['BY']);
    }
  | 'PARTITION' 'BY' 'CURSOR'
    {
-     parser.suggestKeywords(['RANGE']);
+     parser.suggestKeywords(['HASH', 'RANGE']);
    }
- | 'PARTITION' 'BY' RangeClause_EDIT
  ;
 
-RangeClause
- : 'RANGE' ParenthesizedColumnList ParenthesizedPartitionValuesList
+OptionalClusteredBy
+ :
+ | ClusteredBy
  ;
 
-RangeClause_EDIT
- : 'RANGE' 'CURSOR'
- | 'RANGE' ParenthesizedColumnList_EDIT
- | 'RANGE' ParenthesizedColumnList 'CURSOR'
- | 'RANGE' ParenthesizedColumnList ParenthesizedPartitionValuesList_EDIT
- | 'RANGE' ParenthesizedColumnList_EDIT ParenthesizedPartitionValuesList
+OptionalSkewedBy
+ :
+ | SkewedBy
  ;
 
-ParenthesizedPartitionValuesList
- : '(' PartitionValueList ')'
+SkewedBy
+ : 'SKEWED' 'BY' ParenthesizedColumnList ON ParenthesizedSkewedValueList  -> { suggestKeywords: ['STORED AS DIRECTORIES'] }
+ | 'SKEWED' 'BY' ParenthesizedColumnList ON ParenthesizedSkewedValueList 'STORED_AS_DIRECTORIES' // Hack otherwise ambiguous with OptionalStoredAsOrBy
  ;
 
-ParenthesizedPartitionValuesList_EDIT
- : '(' 'CURSOR' RightParenthesisOrError
+SkewedBy_EDIT
+ : 'SKEWED' 'CURSOR'
    {
-     parser.suggestKeywords(['PARTITION']);
+     parser.suggestKeywords(['BY']);
    }
- |'(' PartitionValueList_EDIT RightParenthesisOrError
- ;
-
-PartitionValueList
- : PartitionValue
- | PartitionValueList ',' PartitionValue
- ;
-
-PartitionValueList_EDIT
- : PartitionValue_EDIT
- | PartitionValueList ',' 'CURSOR'
+ | 'SKEWED' 'BY' ParenthesizedColumnList 'CURSOR'
    {
-     parser.suggestKeywords(['PARTITION']);
+     parser.suggestKeywords(['ON']);
    }
- | PartitionValueList ',' 'CURSOR' ',' PartitionValueList
-   {
-     parser.suggestKeywords(['PARTITION']);
-   }
- | PartitionValueList ',' PartitionValue_EDIT
- | PartitionValueList ',' PartitionValue_EDIT ',' PartitionValueList
- ;
-
-PartitionValue
- : 'PARTITION' ValueExpression LessThanOrEqualTo 'VALUES' LessThanOrEqualTo ValueExpression
- | 'PARTITION' 'VALUES' LessThanOrEqualTo ValueExpression
- | 'PARTITION' ValueExpression LessThanOrEqualTo 'VALUES'
- ;
-
-PartitionValue_EDIT
- : 'PARTITION' 'CURSOR'
-   {
-     parser.suggestKeywords(['VALUE', 'VALUES']);
-   }
- | 'PARTITION' ValueExpression_EDIT
-   {
-     if ($2.endsWithLessThanOrEqual) {
-      parser.suggestKeywords(['VALUES']);
-     }
-   }
- | 'PARTITION' ValueExpression 'CURSOR'
-   {
-     parser.suggestKeywords(['<', '<=']);
-   }
- | 'PARTITION' ValueExpression LessThanOrEqualTo 'CURSOR'
-   {
-     parser.suggestKeywords(['VALUES']);
-   }
- | 'PARTITION' ValueExpression_EDIT LessThanOrEqualTo 'VALUES'
- | 'PARTITION' ValueExpression LessThanOrEqualTo 'VALUES' 'CURSOR'
-   {
-     parser.suggestKeywords(['<', '<=']);
-   }
- | 'PARTITION' ValueExpression LessThanOrEqualTo 'VALUES' LessThanOrEqualTo 'CURSOR'
-   {
-     parser.suggestFunctions();
-   }
- | 'PARTITION' ValueExpression LessThanOrEqualTo 'VALUES' LessThanOrEqualTo ValueExpression_EDIT
- | 'PARTITION' 'VALUES' 'CURSOR'
-   {
-     parser.suggestKeywords(['<', '<=']);
-   }
- | 'PARTITION' 'VALUES' LessThanOrEqualTo 'CURSOR'
-   {
-     parser.suggestFunctions();
-   }
- | 'PARTITION' 'VALUES' LessThanOrEqualTo ValueExpression_EDIT
- ;
-
-LessThanOrEqualTo
- : '<'
- | 'COMPARISON_OPERATOR' // This is fine for autocompletion
  ;
 
 OptionalAsSelectStatement
  :
- | 'AS' CommitLocations QuerySpecification
- ;
-
-OptionalAsSelectStatement_EDIT
- : 'AS' CommitLocations 'CURSOR'
-   {
-     parser.suggestKeywords(['SELECT']);
-   }
- | 'AS' CommitLocations QuerySpecification_EDIT
- ;
-
-CommitLocations
- : /* empty */
-   {
-     parser.commitLocations();
-   }
+ | AsSelectStatement
  ;

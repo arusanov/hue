@@ -14,6 +14,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-OtherAggregateFunction_Type
- : 'VAR_SAMP'
+DataDefinition
+ : Msck
+ ;
+
+DataDefinition_EDIT
+ : Msck_EDIT
+ ;
+
+Msck
+ : 'MSCK' OptionalRepair 'TABLE' SchemaQualifiedTableIdentifier
+   {
+     parser.addTablePrimary($4);
+   }
+ ;
+
+Msck_EDIT
+ : 'MSCK' OptionalRepair 'CURSOR'
+   {
+     if (!$2) {
+       parser.suggestKeywords(['TABLE', 'REPAIR TABLE']);
+     } else {
+       parser.suggestKeywords(['TABLE']);
+     }
+   }
+ | 'MSCK' OptionalRepair 'TABLE' 'CURSOR'
+   {
+     parser.suggestTables({ onlyTables: true });
+     parser.suggestDatabases({ appendDot: true });
+   }
+ | 'MSCK' OptionalRepair 'TABLE' SchemaQualifiedTableIdentifier_EDIT
+   {
+     if (parser.yy.result.suggestTables) {
+       parser.yy.result.suggestTables.onlyViews = true;
+     }
+   }
+ ;
+
+OptionalRepair
+ :
+ | 'REPAIR'
  ;

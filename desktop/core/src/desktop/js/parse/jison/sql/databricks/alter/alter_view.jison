@@ -23,23 +23,38 @@ DataDefinition_EDIT
  ;
 
 AlterView
- : AlterViewLeftSide 'AS' QuerySpecification
+ : AlterViewLeftSide 'SET' 'TBLPROPERTIES' ParenthesizedPropertyAssignmentList
+ | AlterViewLeftSide 'AS' QuerySpecification
  ;
 
 AlterView_EDIT
  : AlterViewLeftSide_EDIT
  | AlterViewLeftSide 'CURSOR'
    {
-     parser.suggestKeywords(['AS']);
+     parser.suggestKeywords(['AS', 'RENAME TO', 'SET TBLPROPERTIES', 'UNSET TBLPROPERTIES']);
    }
  | AlterViewLeftSide 'SET' 'CURSOR'
+   {
+     parser.suggestKeywords(['TBLPROPERTIES']);
+   }
+  | AlterViewLeftSide 'UNSET' 'CURSOR'
+   {
+     parser.suggestKeywords(['TBLPROPERTIES']);
+   }
+ | AlterViewLeftSide 'RENAME' 'CURSOR'
+   {
+     parser.suggestKeywords(['TO']);
+   }
+ | AlterViewLeftSide 'RENAME' 'TO' 'CURSOR'
+   {
+     parser.suggestDatabases({ appendDot: true });
+   }
  | AlterViewLeftSide 'AS' 'CURSOR'
    {
      parser.suggestKeywords(['SELECT']);
    }
  | AlterViewLeftSide 'AS' QuerySpecification_EDIT
  ;
-
 
 AlterViewLeftSide
  : 'ALTER' 'VIEW' SchemaQualifiedTableIdentifier

@@ -23,7 +23,7 @@ DataDefinition_EDIT
  ;
 
 DropDatabaseStatement
- : 'DROP' DatabaseOrSchema OptionalIfExists RegularOrBacktickedIdentifier OptionalCascade
+ : 'DROP' DatabaseOrSchema OptionalIfExists RegularOrBacktickedIdentifier OptionalCascadeOrRestrict
  ;
 
 DropDatabaseStatement_EDIT
@@ -38,10 +38,10 @@ DropDatabaseStatement_EDIT
    }
  | 'DROP' DatabaseOrSchema OptionalIfExists RegularOrBacktickedIdentifier 'CURSOR'
    {
-     parser.suggestKeywords(['CASCADE']);
+     parser.suggestKeywords(['CASCADE', 'RESTRICT']);
    }
- | 'DROP' DatabaseOrSchema OptionalIfExists_EDIT RegularOrBacktickedIdentifier OptionalCascade
- | 'DROP' DatabaseOrSchema OptionalIfExists 'CURSOR' RegularOrBacktickedIdentifier OptionalCascade
+ | 'DROP' DatabaseOrSchema OptionalIfExists_EDIT RegularOrBacktickedIdentifier OptionalCascadeOrRestrict
+ | 'DROP' DatabaseOrSchema OptionalIfExists 'CURSOR' RegularOrBacktickedIdentifier OptionalCascadeOrRestrict
    {
      if (!$3) {
        parser.suggestKeywords(['IF EXISTS']);

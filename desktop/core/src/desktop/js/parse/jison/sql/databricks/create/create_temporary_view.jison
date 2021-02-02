@@ -14,6 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-ArbitraryFunctionName
- : 'MAP'
+DataDefinition
+ : CreateTemporaryView
+ ;
+
+DataDefinition_EDIT
+ : CreateTemporaryView_EDIT
+ ;
+
+CreateTemporaryView
+ : 'CREATE' 'TEMPORARY' 'VIEW' RegularIdentifier 'AS' SingleQuotedValue
+ ;
+
+CreateTemporaryView_EDIT
+ : 'CREATE' 'TEMPORARY' 'VIEW' RegularIdentifier 'CURSOR'
+   {
+     parser.suggestKeywords(['AS']);
+   }
  ;

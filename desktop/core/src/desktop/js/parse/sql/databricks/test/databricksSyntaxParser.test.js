@@ -75,6 +75,12 @@ describe('databricksSyntaxParser.js', () => {
     expect(result).toBeFalsy();
   });
 
+  it('should not throw exceptions for "SELECT cos(1) from test"', () => {
+    const result = databricksSyntaxParser.parseSyntax('SELECT cos(1) from test', '', true);
+
+    expect(result).toBeFalsy();
+  });
+
   it('should not report incomplete statement for "SELECT * FR"', () => {
     const result = databricksSyntaxParser.parseSyntax('SELECT * FR', '');
 
@@ -107,7 +113,20 @@ describe('databricksSyntaxParser.js', () => {
     expect(result).toBeTruthy();
     expect(result.loc.first_column).toEqual(10);
     expect(result.loc.last_column).toEqual(14);
-    expect(expectedToStrings(result.expected)).toEqual(['from', 'union']);
+    expect(expectedToStrings(result.expected)).toEqual([
+      'from',
+      'sort',
+      'group',
+      'order',
+      'where',
+      'insert',
+      'limit',
+      'union',
+      'having',
+      'window',
+      'cluster',
+      'distribute'
+    ]);
   });
 
   it('should find errors for "select * from customers c cultster by awasd asd afd;"', () => {
@@ -131,15 +150,30 @@ describe('databricksSyntaxParser.js', () => {
     expect(result).toBeTruthy();
     expect(expectedToStrings(result.expected)).toEqual([
       'SELECT',
+      'DELETE',
       'SET',
       'ALTER',
       'INSERT',
+      'RELOAD',
+      'ABORT',
+      'ANALYZE',
       'CREATE',
+      'EXPLAIN',
+      'EXPORT',
+      'GRANT',
+      'IMPORT',
+      'LOAD',
+      'MERGE',
+      'MSCK',
+      'REVOKE',
+      'SHOW',
       'USE',
       'DROP',
+      'FROM',
       'TRUNCATE',
       'UPDATE',
-      'WITH'
+      'WITH',
+      'DESCRIBE'
     ]);
   });
 
@@ -149,15 +183,30 @@ describe('databricksSyntaxParser.js', () => {
     expect(result).toBeTruthy();
     expect(expectedToStrings(result.expected)).toEqual([
       'select',
+      'delete',
       'set',
       'alter',
       'insert',
+      'reload',
+      'abort',
+      'analyze',
       'create',
+      'explain',
+      'export',
+      'grant',
+      'import',
+      'load',
+      'merge',
+      'msck',
+      'revoke',
+      'show',
       'use',
       'drop',
+      'from',
       'truncate',
       'update',
-      'with'
+      'with',
+      'describe'
     ]);
   });
 
@@ -166,6 +215,16 @@ describe('databricksSyntaxParser.js', () => {
 
     expect(result).toBeTruthy();
     expect(result.expectedStatementEnd).toBeTruthy();
+  });
+
+  it('should find errors for "select * from sample_07 where and\\n\\nselect unknownCol from sample_07;"', () => {
+    const result = databricksSyntaxParser.parseSyntax(
+      'select * from sample_07 where and\n\nselect unknownCol from sample_07;',
+      '',
+      false
+    );
+
+    expect(result).toBeTruthy();
   });
 
   const expectEqualIds = function (beforeA, afterA, beforeB, afterB) {
@@ -204,5 +263,38 @@ describe('databricksSyntaxParser.js', () => {
     );
 
     expectNonEqualIds('slelect ', '', 'select * form ', '');
+  });
+
+  it('should suggest expected words for "SLELECT "', () => {
+    const result = databricksSyntaxParser.parseSyntax('SLELECT ', '');
+
+    expect(result).toBeTruthy();
+    expect(expectedToStrings(result.expected)).toEqual([
+      'SELECT',
+      'DELETE',
+      'SET',
+      'ALTER',
+      'INSERT',
+      'RELOAD',
+      'ABORT',
+      'ANALYZE',
+      'CREATE',
+      'EXPLAIN',
+      'EXPORT',
+      'GRANT',
+      'IMPORT',
+      'LOAD',
+      'MERGE',
+      'MSCK',
+      'REVOKE',
+      'SHOW',
+      'USE',
+      'DROP',
+      'FROM',
+      'TRUNCATE',
+      'UPDATE',
+      'WITH',
+      'DESCRIBE'
+    ]);
   });
 });

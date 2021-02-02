@@ -14,9 +14,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+DataDefinition
+ : DropTemporaryFunctionStatement
+ ;
+
 DataDefinition_EDIT
- : 'SET' 'CURSOR'
+ : DropTemporaryFunctionStatement_EDIT
+ ;
+
+DropTemporaryFunctionStatement
+ : 'DROP' 'TEMPORARY' 'FUNCTION' OptionalIfExists RegularIdentifier
+ ;
+
+DropTemporaryFunctionStatement_EDIT
+ : 'DROP' 'TEMPORARY' 'FUNCTION' OptionalIfExists 'CURSOR'
    {
-     parser.suggestSetOptions();
+     if (!$4) {
+       parser.suggestKeywords(['IF EXISTS']);
+     }
    }
+ | 'DROP' 'TEMPORARY' 'FUNCTION' OptionalIfExists_EDIT
  ;

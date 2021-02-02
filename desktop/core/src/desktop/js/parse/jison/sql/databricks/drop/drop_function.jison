@@ -15,20 +15,31 @@
 // limitations under the License.
 
 DataDefinition
- : 'SET' SetOption '=' SetValue
+ : DropFunctionStatement
  ;
 
-SetOption
- : RegularIdentifier
- | SetOption '.' RegularIdentifier
+DataDefinition_EDIT
+ : DropFunctionStatement_EDIT
  ;
 
-SetValue
- : RegularIdentifier
- | SignedInteger
- | SignedInteger RegularIdentifier
- | QuotedValue
- | 'TRUE'
- | 'FALSE'
- | 'NULL'
+DropFunctionStatement
+ : 'DROP' 'FUNCTION' OptionalIfExists SchemaQualifiedIdentifier
+ ;
+
+DropFunctionStatement_EDIT
+ : 'DROP' 'FUNCTION' OptionalIfExists 'CURSOR'
+   {
+     if (!$3) {
+       parser.suggestKeywords(['IF EXISTS']);
+     }
+   }
+ | 'DROP' 'FUNCTION' OptionalIfExists 'CURSOR' SchemaQualifiedIdentifier
+   {
+     if (!$3) {
+       parser.suggestKeywords(['IF EXISTS']);
+     }
+   }
+ | 'DROP' 'FUNCTION' OptionalIfExists_EDIT
+ | 'DROP' 'FUNCTION' OptionalIfExists_EDIT SchemaQualifiedIdentifier
+ | 'DROP' 'FUNCTION' OptionalIfExists SchemaQualifiedIdentifier_EDIT
  ;

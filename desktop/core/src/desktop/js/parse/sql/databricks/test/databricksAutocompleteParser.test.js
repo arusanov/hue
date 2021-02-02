@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import databricksAutocompleteParser from '../databricksAutocompleteParser';
-
 describe('databricksAutocompleteParser.js', () => {
   beforeAll(() => {
     databricksAutocompleteParser.yy.parseError = function (msg) {
@@ -214,6 +213,18 @@ describe('databricksAutocompleteParser.js', () => {
   });
 
   describe('SET', () => {
+    it('should handle "set databricks.exec.compress.output=true;|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'set databricks.exec.compress.output=true;',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: true
+        }
+      });
+    });
+
     it('should handle "set bla.bla="ble";|"', () => {
       assertAutoComplete({
         beforeCursor: 'set bla.bla="ble";',
@@ -275,6 +286,86 @@ describe('databricksAutocompleteParser.js', () => {
     });
   });
 
+  it('should suggest keywords for "|"', () => {
+    assertAutoComplete({
+      beforeCursor: '',
+      afterCursor: '',
+      expectedResult: {
+        lowerCase: false,
+        suggestKeywords: [
+          'ABORT',
+          'ALTER',
+          'ANALYZE TABLE',
+          'CREATE',
+          'DELETE',
+          'DESCRIBE',
+          'DROP',
+          'EXPLAIN',
+          'EXPORT',
+          'FROM',
+          'GRANT',
+          'IMPORT',
+          'INSERT',
+          'LOAD',
+          'MERGE',
+          'MSCK',
+          'RELOAD FUNCTION',
+          'RESET',
+          'REVOKE',
+          'SELECT',
+          'SET',
+          'SHOW',
+          'TRUNCATE',
+          'UPDATE',
+          'USE',
+          'WITH'
+        ]
+      }
+    });
+  });
+
+  it('should ignore multi-line comments for local suggestions', () => {
+    assertAutoComplete({
+      beforeCursor: '/* line 1\nline 2\n*/\nSELECT * from testTable1;\n',
+      afterCursor: '',
+      containsKeywords: ['SELECT'],
+      expectedResult: {
+        locations: [
+          {
+            type: 'statement',
+            location: { first_line: 1, last_line: 4, first_column: 1, last_column: 25 }
+          },
+          {
+            type: 'selectList',
+            missing: false,
+            location: { first_line: 4, last_line: 4, first_column: 8, last_column: 9 }
+          },
+          {
+            type: 'asterisk',
+            location: { first_line: 4, last_line: 4, first_column: 8, last_column: 9 },
+            tables: [{ identifierChain: [{ name: 'testTable1' }] }]
+          },
+          {
+            type: 'table',
+            location: { first_line: 4, last_line: 4, first_column: 15, last_column: 25 },
+            identifierChain: [{ name: 'testTable1' }]
+          },
+          {
+            type: 'whereClause',
+            missing: true,
+            location: { first_line: 4, last_line: 4, first_column: 25, last_column: 25 }
+          },
+          {
+            type: 'limitClause',
+            missing: true,
+            location: { first_line: 4, last_line: 4, first_column: 25, last_column: 25 }
+          }
+        ],
+        lowerCase: false
+      }
+    });
+  });
+
   describe('partial removal', () => {
     it('should identify part lengths', () => {
       const limitChars = [
@@ -308,16 +399,8 @@ describe('databricksAutocompleteParser.js', () => {
         right: 0
       });
 
-      expect(databricksAutocompleteParser.identifyPartials('foo', 'bar')).toEqual({
-        left: 3,
-        right: 3
-      });
-
-      expect(databricksAutocompleteParser.identifyPartials('fo', 'o()')).toEqual({
-        left: 2,
-        right: 3
-      });
-
+      expect(databricksAutocompleteParser.identifyPartials('foo', 'bar')).toEqual({ left: 3, right: 3 });
+      expect(databricksAutocompleteParser.identifyPartials('fo', 'o()')).toEqual({ left: 2, right: 3 });
       expect(databricksAutocompleteParser.identifyPartials('fo', 'o(')).toEqual({ left: 2, right: 2 });
       expect(databricksAutocompleteParser.identifyPartials('fo', 'o(bla bla)')).toEqual({
         left: 2,
@@ -325,31 +408,20 @@ describe('databricksAutocompleteParser.js', () => {
       });
 
       expect(databricksAutocompleteParser.identifyPartials('foo ', '')).toEqual({ left: 0, right: 0 });
-      expect(databricksAutocompleteParser.identifyPartials("foo '", "'")).toEqual({
-        left: 0,
-        right: 0
-      });
-
-      expect(databricksAutocompleteParser.identifyPartials('foo "', '"')).toEqual({
-        left: 0,
-        right: 0
-      });
+      expect(databricksAutocompleteParser.identifyPartials("foo '", "'")).toEqual({ left: 0, right: 0 });
+      expect(databricksAutocompleteParser.identifyPartials('foo "', '"')).toEqual({ left: 0, right: 0 });
       limitChars.forEach(char => {
         expect(databricksAutocompleteParser.identifyPartials('bar foo' + char, '')).toEqual({
           left: 0,
           right: 0
         });
 
-        expect(databricksAutocompleteParser.identifyPartials('bar foo' + char + 'foofoo', '')).toEqual(
-          {
-            left: 6,
-            right: 0
-          }
-        );
+        expect(databricksAutocompleteParser.identifyPartials('bar foo' + char + 'foofoo', '')).toEqual({
+          left: 6,
+          right: 0
+        });
 
-        expect(
-          databricksAutocompleteParser.identifyPartials('bar foo' + char + 'foofoo ', '')
-        ).toEqual({
+        expect(databricksAutocompleteParser.identifyPartials('bar foo' + char + 'foofoo ', '')).toEqual({
           left: 0,
           right: 0
         });
@@ -369,6 +441,207 @@ describe('databricksAutocompleteParser.js', () => {
           right: 0
         });
       });
+    });
+  });
+
+  describe('identifierChain expansion', () => {
+    it('should expand 01', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testItem'],
+          tableAlias: 'explodedTable',
+          udtf: {
+            expression: { columnReference: [{ name: 'testArray' }] },
+            function: 'explode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testItem' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testArray' }, { name: 'item' }]);
+    });
+
+    it('should expand 02', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testMapKey', 'testMapValue'],
+          tableAlias: 'explodedMap',
+          udtf: {
+            expression: { columnReference: [{ name: 'testMap' }] },
+            function: 'explode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'explodedMap' }, { name: 'testMapValue' }];
+
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testMap' }, { name: 'value' }]);
+    });
+
+    it('should expand 03', () => {
+      const identifierChain = [{ name: 'testMap', keySet: true }];
+      const result = databricksAutocompleteParser.expandLateralViews([], identifierChain);
+
+      expect(result).toEqual([{ name: 'testMap', keySet: true }]);
+    });
+
+    it('should expand 04', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testItem'],
+          tableAlias: 'explodedTable',
+          udtf: {
+            function: 'explode',
+            expression: { columnReference: [{ name: 'testArray' }] }
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testItem' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testArray' }, { name: 'item' }]);
+    });
+
+    it('should expand 05', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testItemB'],
+          tableAlias: 'explodedTableB',
+          udtf: {
+            function: 'explode',
+            expression: { columnReference: [{ name: 'testArrayB' }] }
+          }
+        },
+        {
+          columnAliases: ['testItemA'],
+          tableAlias: 'explodedTableA',
+          udtf: {
+            function: 'explode',
+            expression: { columnReference: [{ name: 'testArrayA' }] }
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testItemA' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testArrayA' }, { name: 'item' }]);
+    });
+
+    it('should expand 06', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testItemB'],
+          tableAlias: 'explodedTableB',
+          udtf: {
+            function: 'explode',
+            expression: { columnReference: [{ name: 'tt2' }, { name: 'testArrayB' }] }
+          }
+        },
+        {
+          columnAliases: ['testItemA'],
+          tableAlias: 'explodedTableA',
+          udtf: {
+            function: 'explode',
+            expression: { columnReference: [{ name: 'tt2' }, { name: 'testArrayA' }] }
+          }
+        }
+      ];
+      const identifierChain = [{ name: 'testItemB' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'tt2' }, { name: 'testArrayB' }, { name: 'item' }]);
+    });
+
+    it('should expand 07', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['ta1_exp'],
+          tableAlias: 'ta1',
+          udtf: {
+            expression: { columnReference: [{ name: 'tt' }, { name: 'testArray1' }] },
+            function: 'explode'
+          }
+        },
+        {
+          columnAliases: ['ta2_exp'],
+          tableAlias: 'ta2',
+          udtf: {
+            expression: { columnReference: [{ name: 'ta1_exp' }, { name: 'testArray2' }] },
+            function: 'explode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'ta2_exp' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([
+        { name: 'tt' },
+        { name: 'testArray1' },
+        { name: 'item' },
+        { name: 'testArray2' },
+        { name: 'item' }
+      ]);
+    });
+
+    it('should expand 08', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testIndex', 'testValue'],
+          tableAlias: 'explodedTable',
+          udtf: {
+            expression: { columnReference: [{ name: 'testArray' }] },
+            function: 'posexplode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testValue' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testArray' }, { name: 'item' }]);
+    });
+
+    it('should expand 09', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testMapKey', 'testMapValue'],
+          tableAlias: 'explodedTable',
+          udtf: {
+            expression: { columnReference: [{ name: 'testMap' }] },
+            function: 'explode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testMapValue' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testMap' }, { name: 'value' }]);
+    });
+
+    it('should expand 10', () => {
+      const lateralViews = [
+        {
+          columnAliases: ['testItem'],
+          tableAlias: 'explodedTable',
+          udtf: {
+            expression: { columnReference: [{ name: 'testArray' }] },
+            function: 'explode'
+          }
+        }
+      ];
+
+      const identifierChain = [{ name: 'testItem' }];
+      const result = databricksAutocompleteParser.expandLateralViews(lateralViews, identifierChain);
+
+      expect(result).toEqual([{ name: 'testArray' }, { name: 'item' }]);
     });
   });
 });
