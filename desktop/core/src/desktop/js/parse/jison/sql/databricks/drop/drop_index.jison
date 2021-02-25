@@ -23,26 +23,26 @@ DataDefinition_EDIT
  ;
 
 DropIndexStatement
- : 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier
+ : 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier
    {
      parser.addTablePrimary($6);
    }
  ;
 
 DropIndexStatement_EDIT
- : 'DROP' 'INDEX' OptionalIfExists 'CURSOR'
+ : 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists 'CURSOR'
    {
      parser.suggestKeywords(['IF EXISTS']);
    }
- | 'DROP' 'INDEX' OptionalIfExists_EDIT
- | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'CURSOR'
+ | 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists_EDIT
+ | 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'CURSOR'
    {
      parser.suggestKeywords(['ON']);
    }
- | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' 'CURSOR'
+ | 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' 'CURSOR'
    {
      parser.suggestTables();
      parser.suggestDatabases({ appendDot: true });
    }
- | 'DROP' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier_EDIT
+ | 'DROP' 'BLOOMFILTER' 'INDEX' OptionalIfExists RegularOrBacktickedIdentifier 'ON' SchemaQualifiedTableIdentifier_EDIT
  ;

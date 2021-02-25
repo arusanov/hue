@@ -43,7 +43,7 @@ DeleteStatement_EDIT
    {
      parser.addTablePrimary($3);
      if (!$5) {
-       parser.suggestKeywords(['WHERE']);
+       parser.suggestKeywords(['AS', 'WHERE']);
      }
    }
  | 'DELETE' 'FROM' SchemaQualifiedTableIdentifier_EDIT OptionalWhereClause

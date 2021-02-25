@@ -27,6 +27,7 @@
 '\u2021'                             { parser.yy.partialCursor = true; parser.yy.cursorFound = yylloc; return 'PARTIAL_CURSOR'; }
 
 // Reserved Keywords
+'ADD'                                { parser.determineCase(yytext); parser.addStatementTypeLocation('ADD', yylloc); return 'ADD'; }
 'ALL'                                { return 'ALL'; }
 'ALTER'                              { parser.determineCase(yytext); parser.addStatementTypeLocation('ALTER', yylloc, yy.lexer.upcomingInput()); return 'ALTER'; }
 'AND'                                { return 'AND'; }
@@ -36,14 +37,19 @@
 'BETWEEN'                            { this.begin('between'); return 'BETWEEN'; }
 'BIGINT'                             { return 'BIGINT'; }
 'BINARY'                             { return 'BINARY'; }
+'BLOOMFILTER'                        { return 'BLOOMFILTER'}
 'BOOLEAN'                            { return 'BOOLEAN'; }
 'BY'                                 { return 'BY'; }
-'CACHE'                              { return 'CACHE'; }
+'CACHE'                              { parser.determineCase(yytext); parser.addStatementTypeLocation('CACHE', yylloc); return 'CACHE'; }
 'CASE'                               { return 'CASE'; }
 'CHAR'                               { return 'CHAR'; }
 'COLUMN'                             { return 'COLUMN'; }
+'COPY'                               { return 'COPY'; }
 'CONF'                               { return 'CONF'; }
 'CONSTRAINT'                         { return 'CONSTRAINT'; }
+'C0NVERT'                            { parser.determineCase(yytext); parser.addStatementTypeLocation('C0NVERT', yylloc); return 'C0NVERT';}
+'CLEAR'                              { parser.determineCase(yytext); parser.addStatementTypeLocation('CLEAR', yylloc); return 'CLEAR'; }
+'CLONE'                              { return 'CLONE'; }
 'CREATE'                             { parser.determineCase(yytext); return 'CREATE'; }
 'CROSS'                              { return 'CROSS'; }
 'CUBE'                               { return 'CUBE'; }
@@ -51,12 +57,16 @@
 'DATABASE'                           { return 'DATABASE'; }
 'DATE'                               { return 'DATE'; }
 'DECIMAL'                            { return 'DECIMAL'; }
+'DEEP'                               { return 'DEEP'; }
 'DELETE'                             { parser.determineCase(yytext); return 'DELETE'; }
+'DELTA'                              { return 'DELTA'; }
 'DESCRIBE'                           { parser.determineCase(yytext); return 'DESCRIBE'; }
+'DENY'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('DENY', yylloc); return 'DENY'; }
 'DISTINCT'                           { return 'DISTINCT'; }
 'DIV'                                { return 'ARITHMETIC_OPERATOR'; }
 'DOUBLE'                             { return 'DOUBLE'; }
 'DROP'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('DROP', yylloc, yy.lexer.upcomingInput()); return 'DROP'; }
+'DRY'                                { return 'DRY'; }
 'ELSE'                               { return 'ELSE'; }
 'END'                                { return 'END'; }
 'EXISTS'                             { parser.yy.correlatedSubQuery = true; return 'EXISTS'; }
@@ -70,6 +80,8 @@
 'FROM'                               { parser.determineCase(yytext); return 'FROM'; }
 'FULL'                               { return 'FULL'; }
 'FUNCTION'                           { return 'FUNCTION'; }
+'FSCK'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('CLEAR', yylloc); return 'FSCK'; }
+'GENERATE'                           { parser.determineCase(yytext); parser.addStatementTypeLocation('DENY', yylloc); return 'GENERATE'; }
 'GRANT'                              { return 'GRANT'; }
 'GROUP'                              { return 'GROUP'; }
 'GROUPING'                           { return 'GROUPING'; }
@@ -85,12 +97,15 @@
 'IS'                                 { return 'IS'; }
 'JOIN'                               { return 'JOIN'; }
 'LATERAL'                            { return 'LATERAL'; }
+'LAZY'                               { return 'LAZY'; }
 'LEFT'                               { return 'LEFT'; }
 'LIKE'                               { return 'LIKE'; }
+'LIST'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('LIST', yylloc); return 'LIST'; }
 'LIMIT'                              { return 'LIMIT'; }
 'LOCAL'                              { return 'LOCAL'; }
 'MACRO'                              { return 'MACRO'; }
 'MAP'                                { return 'MAP'; }
+'MSCK'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('MSCK', yylloc); return 'MSCK'; }
 'NONE'                               { return 'NONE'; }
 'NOT'                                { return 'NOT'; }
 'NULL'                               { return 'NULL'; }
@@ -99,6 +114,8 @@
 'ON'                                 { return 'ON'; }
 'OR'                                 { return 'OR'; }
 'ORDER'                              { return 'ORDER'; }
+'OPTIONS'                            { return 'OPTIONS'; }
+'OPTIMIZE'                           { parser.determineCase(yytext); parser.addStatementTypeLocation('OPTIMIZE', yylloc); return 'OPTIMIZE'; }
 'OUT'                                { return 'OUT'; }
 'OUTER'                              { return 'OUTER'; }
 'PARTITION'                          { return 'PARTITION'; }
@@ -108,15 +125,20 @@
 'RANGE'                              { return 'RANGE'; }
 'REFERENCES'                         { return 'REFERENCES'; }
 'REGEXP'                             { return 'REGEXP'; }
+'REFRESH'                            { return 'REFRESH'; }
 'REVOKE'                             { return 'REVOKE'; }
+'RESTORE'                            { parser.determineCase(yytext); parser.addStatementTypeLocation('RESTORE', yylloc); return 'RESTORE'; }
+'RESET'                              { parser.determineCase(yytext); parser.addStatementTypeLocation('RESET', yylloc); return 'RESET'; }
 'RIGHT'                              { return 'RIGHT'; }
 'RLIKE'                              { return 'RLIKE'; }
 'ROLLUP'                             { return 'ROLLUP'; }
 'ROW'                                { return 'ROW'; }
 'ROWS'                               { return 'ROWS'; }
+'RUN'                                { return 'RUN'; }
 'SELECT'                             { parser.determineCase(yytext); parser.addStatementTypeLocation('SELECT', yylloc); return 'SELECT'; }
 'SEMI'                               { return 'SEMI'; }
 'SET'                                { parser.determineCase(yytext); parser.addStatementTypeLocation('SET', yylloc); return 'SET'; }
+'SHALLOW'                            { return 'SHALLOW'; }
 'SMALLINT'                           { return 'SMALLINT'; }
 'SYNC'                               { return 'SYNC'; }
 'TABLE'                              { return 'TABLE'; }
@@ -127,20 +149,22 @@
 'TRUNCATE'                           { parser.determineCase(yytext); parser.addStatementTypeLocation('TRUNCATE', yylloc, yy.lexer.upcomingInput()); return 'TRUNCATE'; }
 'UNBOUNDED'                          { return 'UNBOUNDED'; }
 'UNION'                              { return 'UNION'; }
+'UNCACHE'                            { return 'UNCACHE'; }
 'UPDATE'                             { parser.determineCase(yytext); return 'UPDATE'; }
 'USER'                               { return 'USER'; }
 'USING'                              { return 'USING'; }
 'UTC_TIMESTAMP'                      { return 'UTC_TIMESTAMP'; }
+'VACUUM'                             { parser.determineCase(yytext); parser.addStatementTypeLocation('VACUUM', yylloc); return 'VACUUM'; }
 'VALUES'                             { return 'VALUES'; }
 'VARCHAR'                            { return 'VARCHAR'; }
 'VIEWS'                              { return 'VIEWS'; }
 'WHEN'                               { return 'WHEN'; }
 'WHERE'                              { return 'WHERE'; }
 'WITH'                               { parser.determineCase(yytext); parser.addStatementTypeLocation('WITH', yylloc); return 'WITH'; }
+'ZORDER'                             { return 'ZORDER'; }
 
 // Non-reserved Keywords
 'ABORT'                              { parser.determineCase(yytext); return 'ABORT'; }
-'ADD'                                { return 'ADD'; }
 'ADMIN'                              { return 'ADMIN'; }
 'AFTER'                              { return 'AFTER'; }
 'ANALYZE'                            { parser.determineCase(yytext); return 'ANALYZE'; }
@@ -230,7 +254,6 @@ DOUBLE\s+PRECISION                   { return 'DOUBLE_PRECISION'; }
 'METADATA'                           { return 'METADATA'; }
 'MINUTE'                             { return 'MINUTE'; }
 'MONTH'                              { return 'MONTH'; }
-'MSCK'                               { return 'MSCK'; }
 'NO_DROP'                            { return 'NO_DROP'; }
 'NORELY'                             { return 'NORELY'; }
 'NOSCAN'                             { return 'NOSCAN'; }

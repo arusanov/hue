@@ -31,7 +31,11 @@ CreateTable_EDIT
  | 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists 'CURSOR'
    {
      if (!$6) {
-       parser.suggestKeywords(['IF NOT EXISTS']);
+       parser.suggestKeywords([
+         'DEEP CLONE',
+         'IF NOT EXISTS',
+         'SHALLOW CLONE'
+         ]);
      }
    }
  | 'CREATE' OptionalTemporary OptionalTransactional OptionalExternal 'TABLE' OptionalIfNotExists_EDIT
@@ -205,4 +209,10 @@ SkewedBy_EDIT
 OptionalAsSelectStatement
  :
  | AsSelectStatement
+ ;
+
+ OptionalClone
+ :
+ | 'DEEP CLONE'
+ | 'SHALLOW'
  ;
