@@ -17,7 +17,7 @@
 DataDefinition_EDIT
  : 'DROP' 'CURSOR'
    {
-     parser.suggestKeywords(['DATABASE', 'FUNCTION', 'INDEX', 'SCHEMA', 'TABLE', 'TEMPORARY FUNCTION', 'VIEW']);
+     parser.suggestKeywords(['DATABASE', 'FUNCTION', 'BLOOMFILTER INDEX', 'SCHEMA', 'TABLE', 'TEMPORARY FUNCTION', 'VIEW']);
    }
  ;
 

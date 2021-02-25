@@ -874,4 +874,259 @@ describe('databricksAutocompleteParser.js INSERT statements', () => {
       });
     });
   });
+
+  describe('MERGE', () => {
+    // it(
+    //     'should handle "MERGE INTO target AS T USING source AS S ON T.col = S.col ' +
+    //     ' WHEN MATCHED AND (S.col2 IS NOT NULL) THEN UPDATE SET col2 = S.col' +
+    //     ' WHEN MATCHED AND S.col2 IS NULL THEN DELETE' +
+    //     ' WHEN NOT MATCHED THEN INSERT VALUES (S.col, S.col2);"',
+    //     () => {
+    //       assertAutoComplete({
+    //         beforeCursor:
+    //             'MERGE INTO target AS T USING source AS S ON T.col = S.col\n' +
+    //             ' WHEN MATCHED AND (S.col2 IS NOT NULL) THEN UPDATE SET col2 = S.col\n' +
+    //             ' WHEN MATCHED AND S.col2 IS NULL THEN DELETE\n' +
+    //             ' WHEN NOT MATCHED THEN INSERT VALUES (S.col, S.col2);',
+    //         afterCursor: '',
+    //         containsKeywords: ['SELECT'],
+    //         noErrors: true,
+    //         expectedResult: {
+    //           lowerCase: false
+    //         }
+    //       });
+    //     }
+    // );
+
+    it('should suggest keywords for "|"', () => {
+      assertAutoComplete({
+        beforeCursor: '',
+        afterCursor: '',
+        containsKeywords: ['MERGE'],
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['INTO']
+        }
+      });
+    });
+
+    it('should suggest tables for "MERGE INTO |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestDatabases: { appendDot: true },
+          suggestTables: {}
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AS T USING']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['T USING']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['USING']
+        }
+      });
+    });
+
+    it('should suggest tables for "MERGE INTO tbl AS T USING |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestDatabases: { appendDot: true },
+          suggestTables: {}
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING (|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING (',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['SELECT']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AS S ON']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['S ON']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['ON']
+        }
+      });
+    });
+
+    it('should suggest columns for "MERGE INTO tbl AS T USING db.tbl2 AS S ON |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON ',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['CASE', 'EXISTS', 'NOT', 'NULL'],
+        expectedResult: {
+          lowerCase: false,
+          suggestColumns: {
+            tables: [
+              { identifierChain: [{ name: 'db' }, { name: 'tbl2' }], alias: 'S' },
+              { identifierChain: [{ name: 'tbl' }], alias: 'T' }
+            ]
+          },
+          suggestFunctions: {},
+          suggestIdentifiers: [
+            { name: 'S.', type: 'alias' },
+            { name: 'T.', type: 'alias' }
+          ]
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar  ',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['WHEN', 'OR'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['MATCHED', 'NOT MATCHED']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN NOT |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN NOT ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['MATCHED']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['AND', 'THEN']
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED AND (S.col2 IS NOT NULL) |"', () => {
+      assertAutoComplete({
+        beforeCursor:
+            'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED AND (S.col2 IS NOT NULL) ',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['AND', 'THEN'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED THEN |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'MERGE INTO tbl AS T USING db.tbl2 AS S ON T.foo = S.bar WHEN MATCHED THEN ',
+        afterCursor: '',
+        noErrors: true,
+        expectedResult: {
+          lowerCase: false,
+          suggestKeywords: ['DELETE', 'INSERT VALUES', 'UPDATE SET']
+        }
+      });
+    });
+
+
+  });
 });

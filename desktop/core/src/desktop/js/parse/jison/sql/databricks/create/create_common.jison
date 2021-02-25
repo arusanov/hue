@@ -23,7 +23,7 @@ DataDefinition_EDIT
         if ($2 && !$3) {
          parser.suggestKeywords(['EXTERNAL TABLE', 'FUNCTION', 'TABLE']);
        } else if (!$2 && !$3) {
-         parser.suggestKeywords(['DATABASE', 'EXTERNAL TABLE', 'FUNCTION', 'OR REPLACE',
+         parser.suggestKeywords(['BLOOMFILTER INDEX', 'DATABASE', 'EXTERNAL TABLE', 'FUNCTION', 'OR REPLACE',
           'SCHEMA', 'TABLE', 'TEMPORARY EXTERNAL TABLE', 'TEMPORARY FUNCTION',
            'TEMPORARY TABLE', 'TRANSACTIONAL TABLE', 'VIEW']);
        } else if ($3) {

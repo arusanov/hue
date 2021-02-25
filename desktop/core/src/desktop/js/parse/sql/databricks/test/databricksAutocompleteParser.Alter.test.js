@@ -1315,4 +1315,65 @@ describe('databricksAutocompleteParser.js ALTER statements', () => {
       });
     });
   });
+
+  describe('FSCK', () => {
+    it('should handle "FSCK REPAIR TABLE boo.baa;|"', () => {
+      assertAutoComplete({
+        beforeCursor: 'FSCK REPAIR TABLE boo.baa;',
+        afterCursor: '',
+        noErrors: true,
+        containsKeywords: ['SELECT'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+
+    it('should suggest keywords for "|"', () => {
+      assertAutoComplete({
+        beforeCursor: '',
+        afterCursor: '',
+        containsKeywords: ['FSCK'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "FSCK |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'FSCK ',
+        afterCursor: '',
+        containsKeywords: ['REPAIR TABLE'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest keywords for "FSCK REPAIR |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'FSCK REPAIR ',
+        afterCursor: '',
+        containsKeywords: ['TABLE'],
+        expectedResult: {
+          lowerCase: false
+        }
+      });
+    });
+
+    it('should suggest tables for "FSCK REPAIR TABLE |"', () => {
+      assertAutoComplete({
+        beforeCursor: 'FSCK REPAIR TABLE ',
+        afterCursor: '',
+        expectedResult: {
+          lowerCase: false,
+          suggestTables: { onlyTables: true },
+          suggestDatabases: { appendDot: true }
+        }
+      });
+    });
+  });
+
 });

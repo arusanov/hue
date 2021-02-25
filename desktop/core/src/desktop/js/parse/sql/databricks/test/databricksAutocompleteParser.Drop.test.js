@@ -41,9 +41,9 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       expectedResult: {
         lowerCase: false,
         suggestKeywords: [
+          'BLOOMFILTER INDEX',
           'DATABASE',
           'FUNCTION',
-          'INDEX',
           'SCHEMA',
           'TABLE',
           'TEMPORARY FUNCTION',
@@ -94,7 +94,7 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
         beforeCursor: '',
         afterCursor: '',
         noErrors: true,
-        containsKeywords: ['DELETE'],
+        containsKeywords: ['DELETE', 'DROP'],
         expectedResult: {
           lowerCase: false
         }
@@ -145,7 +145,7 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
         noErrors: true,
         expectedResult: {
           lowerCase: false,
-          suggestKeywords: ['WHERE']
+          suggestKeywords: ['AS', 'WHERE']
         }
       });
     });
@@ -268,10 +268,10 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
     });
   });
 
-  describe('DROP INDEX', () => {
-    it('should handle "DROP INDEX IF EXISTS baa ON baa.boo;|"', () => {
+  describe('DROP BLOOMFILTER INDEX', () => {
+    it('should handle "DROP BLOOMFILTER INDEX IF EXISTS baa ON baa.boo;|"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP INDEX IF EXISTS baa ON baa.boo;',
+        beforeCursor: 'DROP BLOOMFILTER INDEX IF EXISTS baa ON baa.boo;',
         afterCursor: '',
         noErrors: true,
         containsKeywords: ['SELECT'],
@@ -281,9 +281,9 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       });
     });
 
-    it('should suggest keywords for "DROP INDEX |"', () => {
+    it('should suggest keywords for "DROP BLOOMFILTER INDEX |"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP INDEX ',
+        beforeCursor: 'DROP BLOOMFILTER INDEX ',
         afterCursor: '',
         expectedResult: {
           lowerCase: false,
@@ -292,9 +292,9 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       });
     });
 
-    it('should suggest keywords for "DROP INDEX IF |"', () => {
+    it('should suggest keywords for "DROP BLOOMFILTER INDEX IF |"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP INDEX IF ',
+        beforeCursor: 'DROP BLOOMFILTER INDEX IF ',
         afterCursor: '',
         expectedResult: {
           lowerCase: false,
@@ -303,9 +303,9 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       });
     });
 
-    it('should suggest keywords for "DROP INDEX baa |"', () => {
+    it('should suggest keywords for "DROP BLOOMFILTER INDEX baa |"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP INDEX baa ',
+        beforeCursor: 'DROP BLOOMFILTER INDEX baa ',
         afterCursor: '',
         expectedResult: {
           lowerCase: false,
@@ -314,9 +314,9 @@ describe('databricksAutocompleteParser.js DROP statements', () => {
       });
     });
 
-    it('should suggest tabls for "DROP INDEX baa ON |"', () => {
+    it('should suggest tabls for "DROP BLOOMFILTER INDEX baa ON |"', () => {
       assertAutoComplete({
-        beforeCursor: 'DROP INDEX baa ON ',
+        beforeCursor: 'DROP BLOOMFILTER INDEX baa ON ',
         afterCursor: '',
         expectedResult: {
           lowerCase: false,
